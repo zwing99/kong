@@ -1,97 +1,196 @@
+use crate::json::*;
 use std::convert::TryFrom;
 use std::fmt;
 
 use serde::Deserialize;
 
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) struct InvalidHeader(String);
+use serde_json::Value as JsonValue;
 
-impl fmt::Display for InvalidHeader {
+fn split_str(input: &str) -> Result<(&str, &str), InvalidKeyValue> {
+    input
+        .split_once(':')
+        .filter(|(name, value)| !name.is_empty() && !value.is_empty())
+        .ok_or_else(|| InvalidKeyValue(input.into()))
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct InvalidKeyValue(String);
+
+impl fmt::Display for InvalidKeyValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Invalid <header>:<name> => {}", self.0)
+        write!(f, "Invalid <key>:<value> => {:?}", self.0)
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(try_from = "String")]
-pub(crate) struct KeyValuePair(pub(crate) String, pub(crate) String);
+pub(crate) struct KeyValue(pub(crate) String, pub(crate) String);
 
-impl TryFrom<String> for KeyValuePair {
-    type Error = InvalidHeader;
+impl TryFrom<String> for KeyValue {
+    type Error = InvalidKeyValue;
 
     fn try_from(input: String) -> std::result::Result<Self, Self::Error> {
-        input
-            .split_once(':')
-            .filter(|(name, value)| {
-                name.len() > 0 && value.len() > 0
-            })
-            .ok_or_else(|| InvalidHeader(input.clone()))
-            .and_then(|(name, value)| {
-                Ok(KeyValuePair(name.to_string(), value.to_string()))
-            })
+        Ok(split_str(&input)?.into())
     }
 }
 
-impl TryFrom<&str> for KeyValuePair {
-    type Error = InvalidHeader;
+impl From<(&str, &str)> for KeyValue {
+    fn from(value: (&str, &str)) -> Self {
+        KeyValue(value.0.to_owned(), value.1.to_owned())
+    }
+}
+
+impl TryFrom<&str> for KeyValue {
+    type Error = InvalidKeyValue;
 
     fn try_from(value: &str) -> std::result::Result<Self, Self::Error> {
-        KeyValuePair::try_from(value.to_string())
+        KeyValue::try_from(value.to_string())
     }
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
-pub(crate) struct Transformations<T = KeyValuePair> {
+#[serde(default)]
+pub(crate) struct TransformationsConfig<T = KeyValue> {
     pub(crate) headers: Vec<T>,
+    pub(crate) json: Vec<T>,
+    pub(crate) json_types: Vec<Cast>,
 }
 
-impl<T> Default for Transformations<T> {
+impl<T> Default for TransformationsConfig<T> {
     fn default() -> Self {
-        Transformations { headers: vec![] }
+        TransformationsConfig {
+            headers: vec![],
+            json: vec![],
+            json_types: vec![],
+        }
+    }
+}
+
+impl TransformationsConfig {
+    fn cast_json(mut self) -> Vec<(String, JsonValue)> {
+        let mut json_values = Vec::with_capacity(self.json.len());
+        let json = self.json.drain(..);
+
+        for (i, kv) in json.enumerate() {
+            if let Some(typ) = self.json_types.get(i) {
+                json_values.push((kv.0, typ.convert(kv.1)));
+            } else {
+                json_values.push((kv.0, Cast::String.convert(kv.1)));
+            }
+        }
+
+        json_values
     }
 }
 
 #[derive(Deserialize, Default, PartialEq, Eq, Debug, Clone)]
 #[serde(default)]
+pub(crate) struct ConfigInput {
+    remove: TransformationsConfig<String>,
+    rename: TransformationsConfig,
+    replace: TransformationsConfig,
+    add: TransformationsConfig,
+    append: TransformationsConfig,
+}
+
+impl Into<Config> for ConfigInput {
+    fn into(self) -> Config {
+        let mut config: Config = Default::default();
+
+        if !self.remove.headers.is_empty()
+            || !self.rename.headers.is_empty()
+            || !self.replace.headers.is_empty()
+            || !self.add.headers.is_empty()
+            || !self.append.headers.is_empty()
+        {
+            config.headers = Some(Headers {
+                remove: self.remove.headers,
+                rename: self.rename.headers,
+                replace: self.replace.headers.clone(),
+                add: self.add.headers.clone(),
+                append: self.append.headers.clone(),
+            });
+        }
+
+        if !self.remove.json.is_empty()
+            || !self.rename.json.is_empty()
+            || !self.replace.json.is_empty()
+            || !self.add.json.is_empty()
+            || !self.append.json.is_empty()
+        {
+            config.json = Some(Json {
+                remove: self.remove.json,
+                replace: self.replace.cast_json(),
+                add: self.add.cast_json(),
+                append: self.append.cast_json(),
+            });
+        }
+
+        config
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub(crate) struct Headers {
+    pub(crate) remove: Vec<String>,
+    pub(crate) rename: Vec<KeyValue>,
+    pub(crate) replace: Vec<KeyValue>,
+    pub(crate) add: Vec<KeyValue>,
+    pub(crate) append: Vec<KeyValue>,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub(crate) struct Json {
+    pub(crate) remove: Vec<String>,
+    pub(crate) replace: Vec<(String, JsonValue)>,
+    pub(crate) add: Vec<(String, JsonValue)>,
+    pub(crate) append: Vec<(String, JsonValue)>,
+}
+
+#[derive(Default, Debug, Clone)]
 pub(crate) struct Config {
-    pub(crate) remove: Transformations<String>,
-    pub(crate) rename: Transformations,
-    pub(crate) replace: Transformations,
-    pub(crate) add: Transformations,
-    pub(crate) append: Transformations,
+    pub(crate) headers: Option<Headers>,
+    pub(crate) json: Option<Json>,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    use serde_json;
-
-    impl KeyValuePair {
+    impl KeyValue {
         #[warn(unused)]
         pub(crate) fn new<T: std::string::ToString>(name: T, value: T) -> Self {
-            KeyValuePair(name.to_string(), value.to_string())
+            KeyValue(name.to_string(), value.to_string())
         }
     }
 
-
     #[test]
     fn test_header_try_from_valid() {
-        assert_eq!(Ok(KeyValuePair::new("a", "b")), KeyValuePair::try_from("a:b"));
+        assert_eq!(Ok(KeyValue::new("a", "b")), KeyValue::try_from("a:b"));
     }
 
     #[test]
     fn test_header_try_from_invalid() {
-        assert_eq!(Err(InvalidHeader("a".to_string())), KeyValuePair::try_from("a"));
-        assert_eq!(Err(InvalidHeader("a:".to_string())), KeyValuePair::try_from("a:"));
-        assert_eq!(Err(InvalidHeader(":b".to_string())), KeyValuePair::try_from(":b"));
+        assert_eq!(
+            Err(InvalidKeyValue("a".to_string())),
+            KeyValue::try_from("a")
+        );
+        assert_eq!(
+            Err(InvalidKeyValue("a:".to_string())),
+            KeyValue::try_from("a:")
+        );
+        assert_eq!(
+            Err(InvalidKeyValue(":b".to_string())),
+            KeyValue::try_from(":b")
+        );
     }
 
     #[test]
     fn test_json_deserialize_transformations() {
         assert_eq!(
-            Transformations {
-                headers: vec![KeyValuePair::new("a", "b"), KeyValuePair::new("c", "d")]
+            TransformationsConfig {
+                headers: vec![KeyValue::new("a", "b"), KeyValue::new("c", "d")],
+                ..Default::default()
             },
             serde_json::from_str(r#"{ "headers": ["a:b", "c:d"] }"#).unwrap()
         );
