@@ -97,13 +97,18 @@ main() {
         }
     fi
 
+    args=()
+    if [[ $KONG_TEST_CARGO_BUILD_MODE == "release" ]]; then
+        args+=(--release)
+    fi
 
     "$cargo" build \
         --manifest-path "$FIXTURE_PATH/Cargo.toml" \
         --workspace \
         --lib \
         --target "$BUILD_TARGET" \
-        --target-dir "$TARGET_DIR"
+        --target-dir "$TARGET_DIR" \
+        "${args[@]}"
 
     test -d "$KONG_TEST_WASM_FILTERS_PATH" || {
         echo "ERROR: test filter path ($KONG_TEST_WASM_FILTERS_PATH) "
