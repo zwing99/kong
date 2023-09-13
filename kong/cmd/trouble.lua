@@ -10,7 +10,7 @@ local function test_tcp(host, port)
     log("Success!")
     tcp.close(tcp)
   else
-    log(err)
+    error(err)
   end
 
   os.exit(0)
