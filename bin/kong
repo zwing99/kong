@@ -32,6 +32,7 @@ local cmds = {
   roar = true,
   hybrid = true,
   vault = true,
+  trouble = true,
 }
 
 -- unnecessary to inject nginx directives for these simple cmds
