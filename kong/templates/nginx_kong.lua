@@ -2,6 +2,9 @@ return [[
 server_tokens off;
 
 error_log ${{PROXY_ERROR_LOG}} ${{LOG_LEVEL}};
+> if extra_error_log_path then
+error_log ${{extra_error_log_path}} ${{LOG_LEVEL}};
+> end
 
 lua_package_path       '${{LUA_PACKAGE_PATH}};;';
 lua_package_cpath      '${{LUA_PACKAGE_CPATH}};;';
@@ -100,6 +103,9 @@ server {
 > end
 
     error_log  ${{PROXY_ERROR_LOG}} ${{LOG_LEVEL}};
+> if extra_error_log_path then
+    error_log ${{extra_error_log_path}} ${{LOG_LEVEL}};
+> end
 
 > if proxy_ssl_enabled then
 > for i = 1, #ssl_cert do
@@ -393,6 +399,9 @@ server {
 
     access_log ${{ADMIN_ACCESS_LOG}};
     error_log  ${{ADMIN_ERROR_LOG}} ${{LOG_LEVEL}};
+> if extra_error_log_path then
+    error_log ${{extra_error_log_path}} ${{LOG_LEVEL}};
+> end
 
 > if admin_ssl_enabled then
 > for i = 1, #admin_ssl_cert do
@@ -433,6 +442,9 @@ server {
 
     access_log ${{STATUS_ACCESS_LOG}};
     error_log  ${{STATUS_ERROR_LOG}} ${{LOG_LEVEL}};
+> if extra_error_log_path then
+    error_log ${{extra_error_log_path}} ${{LOG_LEVEL}};
+> end
 
 > if status_ssl_enabled then
 > for i = 1, #status_ssl_cert do
@@ -500,6 +512,9 @@ server {
 
     access_log ${{ADMIN_GUI_ACCESS_LOG}};
     error_log ${{ADMIN_GUI_ERROR_LOG}};
+> if extra_error_log_path then
+    error_log ${{extra_error_log_path}} ${{LOG_LEVEL}};
+> end
 
     gzip on;
     gzip_types text/plain text/css application/json application/javascript;
@@ -518,6 +533,9 @@ server {
 
     access_log ${{ADMIN_ACCESS_LOG}};
     error_log  ${{ADMIN_ERROR_LOG}} ${{LOG_LEVEL}};
+> if extra_error_log_path then
+    error_log ${{extra_error_log_path}} ${{LOG_LEVEL}};
+> end
 
 > if cluster_mtls == "shared" then
     ssl_verify_client   optional_no_ca;
