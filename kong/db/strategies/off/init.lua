@@ -23,12 +23,6 @@ local lmdb_get = lmdb.get
 local get_workspace_id = workspaces.get_workspace_id
 
 
-local PROCESS_AUTO_FIELDS_OPTS = {
-  no_defaults = true,
-  show_ws_id = true,
-}
-
-
 local off = {}
 
 
@@ -79,13 +73,13 @@ local function get_entity_ids_tagged(key, tag_names, tags_cond)
   local dict = {} -- keys are entity_ids, values are true
 
   for i = 1, #tag_names do
+    yield(true)
+
     tag_name = tag_names[i]
     list, err = unmarshall(lmdb_get("taggings:" .. tag_name .. "|" .. key))
     if err then
       return nil, err
     end
-
-    yield(true)
 
     list = list or {}
 
@@ -176,6 +170,8 @@ local function page_for_key(self, key, size, offset, options)
 
   local item
   for i = offset, offset + size - 1 do
+    yield(true)
+
     item = list[i]
     if not item then
       offset = nil
@@ -213,7 +209,7 @@ local function page_for_key(self, key, size, offset, options)
     end
 
     if item then
-      ret[ret_idx] = schema:process_auto_fields(item, "select", true, PROCESS_AUTO_FIELDS_OPTS)
+      ret[ret_idx] = item
       ret_idx = ret_idx + 1
     end
   end
@@ -238,8 +234,6 @@ local function select_by_key(schema, key)
       return nil
     end
   end
-
-  entity = schema:process_auto_fields(entity, "select", true, PROCESS_AUTO_FIELDS_OPTS)
 
   return entity
 end
