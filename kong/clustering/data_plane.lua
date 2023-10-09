@@ -1,7 +1,4 @@
-local _M = {}
-local _MT = { __index = _M, }
-
-
+local ffi = require("ffi")
 local semaphore = require("ngx.semaphore")
 local cjson = require("cjson.safe")
 local constants = require("kong.constants")
@@ -30,9 +27,18 @@ local LOG_PREFIX = "[clustering] "
 local DECLARATIVE_EMPTY_CONFIG_HASH = constants.DECLARATIVE_EMPTY_CONFIG_HASH
 
 
+ffi.cdef("int malloc_trim(size_t);")
+
+
 local function is_timeout(err)
   return err and sub(err, -7) == "timeout"
 end
+
+
+local _M = {}
+
+
+local _MT = { __index = _M, }
 
 
 function _M.new(clustering)
@@ -216,6 +222,17 @@ function _M:communicate(premature)
   local read_thread = ngx.thread.spawn(function()
     local receive_start
     local last_seen = ngx.time()
+    local malloc_trim do
+      local C = ffi.C
+      local process = require("ngx.process")
+      if process.type() == "privileged agent" then
+        malloc_trim = function()
+          C.malloc_trim(1)
+        end
+      else
+        malloc_trim = function() end
+      end
+    end
     while not (config_exit or exiting()) do
       local data, typ, err = wb:recv_frame()
       if err then
@@ -274,6 +291,7 @@ function _M:communicate(premature)
         end
 
         ngx.sleep(0)
+        malloc_trim()
       end
     end
   end)
