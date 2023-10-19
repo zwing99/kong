@@ -587,6 +587,22 @@ describe("CP/DP config compat transformations #" .. strategy, function()
         admin.plugins:remove({ id = ai_response_transformer.id })
       end)
     end)
+
+    describe("www-authenticate header in plugins (realm config)", function()
+      it("[jwt] removes realm for versions below 3.8", function()
+        local jwt = admin.plugins:insert {
+          name = "jwt",
+          config = {
+            realm = "test",
+          }
+        }
+        local expected_jwt_prior_38 = cycle_aware_deep_copy(jwt)
+        expected_jwt_prior_38.config.realm = nil
+        do_assert(utils.uuid(), "3.7.0", expected_jwt_prior_38)
+        -- cleanup
+        admin.plugins:remove({ id = jwt.id })
+      end)
+    end)
   end)
 end)
 
