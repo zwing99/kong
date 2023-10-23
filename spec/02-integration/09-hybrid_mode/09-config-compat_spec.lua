@@ -587,6 +587,25 @@ describe("CP/DP config compat transformations #" .. strategy, function()
         admin.plugins:remove({ id = ai_response_transformer.id })
       end)
     end)
+
+    describe("www-authenticate header in plugins (realm config)", function()
+      it("[ldap-auth] removes realm for versions below 3.8", function()
+        local ldap_auth = admin.plugins:insert {
+          name = "ldap-auth",
+          config = {
+            ldap_host = "localhost",
+            base_dn = "test",
+            attribute = "test",
+            realm = "test",
+          }
+        }
+        local expected_ldap_auth_prior_38 = cycle_aware_deep_copy(ldap_auth)
+        expected_ldap_auth_prior_38.config.realm = nil
+        do_assert(utils.uuid(), "3.7.0", expected_ldap_auth_prior_38)
+        -- cleanup
+        admin.plugins:remove({ id = ldap_auth.id })
+      end)
+    end)
   end)
 end)
 
