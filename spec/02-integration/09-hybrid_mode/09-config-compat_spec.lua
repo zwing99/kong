@@ -587,6 +587,23 @@ describe("CP/DP config compat transformations #" .. strategy, function()
         admin.plugins:remove({ id = ai_response_transformer.id })
       end)
     end)
+
+    describe("www-authenticate header in plugins (realm config)", function()
+      it("[oauth2] removes realm for versions below 3.8", function()
+        local oauth2 = admin.plugins:insert {
+          name = "oauth2",
+          config = {
+            enable_password_grant = true,
+            realm = "test",
+          }
+        }
+        local expected_oauth2_prior_38 = cycle_aware_deep_copy(oauth2)
+        expected_oauth2_prior_38.config.realm = nil
+        do_assert(utils.uuid(), "3.7.0", expected_oauth2_prior_38)
+        -- cleanup
+        admin.plugins:remove({ id = oauth2.id })
+      end)
+    end)
   end)
 end)
 

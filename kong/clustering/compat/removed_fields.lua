@@ -136,4 +136,11 @@ return {
       "llm.model.options.upstream_path",
     },
   },
+
+  -- Any dataplane older than 3.8.0
+  [3008000000] = {
+    oauth2 = {
+      "realm",
+    },
+  },
 }
