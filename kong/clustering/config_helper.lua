@@ -354,6 +354,8 @@ local function update(declarative_config, msg)
     return nil, err, err_t
   end
 
+  ngx_log(ngx.DEBUG, _log_prefix, "loaded configuration with transaction ID " .. msg.current_transaction_id)
+
   return true
 end
 

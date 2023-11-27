@@ -153,6 +153,8 @@ function _M:export_deflated_reconfigure_payload()
   self.current_config_hash = config_hash
   self.deflated_reconfigure_payload = payload
 
+  ngx_log(ngx_DEBUG, _log_prefix, "exported configuration with transaction id " .. current_transaction_id)
+
   return payload, nil, config_hash
 end
 

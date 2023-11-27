@@ -967,6 +967,16 @@ return {
             return
           end
 
+          -- Before rebuiding the internal structures, retrieve the current PostgreSQL transaction ID to make it the
+          -- current transaction ID after the rebuild has finished.
+          local rebuild_transaction_id, err = kong_shm:get("test:current_transaction_id")
+          if err then
+            log(ERR, err)
+          end
+          if rebuild_transaction_id then
+            log(DEBUG, "beginning configuration processing for transaction ID " .. rebuild_transaction_id)
+          end
+
           local router_update_status, err = rebuild_router({
             name = "router",
             timeout = 0,
@@ -994,6 +1004,11 @@ return {
             if not wasm_update_status then
               log(ERR, "could not rebuild wasm filter chains via timer: ", err)
             end
+          end
+
+          if rebuild_transaction_id and global.CURRENT_TRANSACTION_ID ~= rebuild_transaction_id then
+            log(DEBUG, "configuration processing completed for transaction ID " .. rebuild_transaction_id)
+            global.CURRENT_TRANSACTION_ID = rebuild_transaction_id
           end
         end
 
@@ -1092,6 +1107,26 @@ return {
   },
   access = {
     before = function(ctx)
+      if IS_DEBUG then
+        -- If this is a version-conditional request, abort it if this dataplane has not processed at least the
+        -- specified configuration version yet.
+        local if_kong_transaction_id = kong.request and kong.request.get_header('if-kong-test-transaction-id')
+        if if_kong_transaction_id then
+          if_kong_transaction_id = tonumber(if_kong_transaction_id)
+          kong.log.info((if_kong_transaction_id > global.CURRENT_TRANSACTION_ID and "REJECTED" or "SUCCESSFUL"), " conditional request for transaction id ", if_kong_transaction_id, " global is ", global.CURRENT_TRANSACTION_ID)
+          if if_kong_transaction_id and if_kong_transaction_id > global.CURRENT_TRANSACTION_ID then
+            return kong.response.error(
+                    503,
+                    "Service Unavailable",
+                    {
+                      ["X-Kong-Reconfiguration-Status"] = "pending",
+                      ["Retry-After"] = tostring(kong.configuration.worker_state_update_frequency or 1),
+                    }
+            )
+          end
+        end
+      end
+
       -- if there is a gRPC service in the context, don't re-execute the pre-access
       -- phase handler - it has been executed before the internal redirect
       if ctx.service and (ctx.service.protocol == "grpc" or

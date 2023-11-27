@@ -2,7 +2,31 @@ local helpers = require "spec.helpers"
 local cjson = require "cjson"
 local utils = require "kong.tools.utils"
 
-describe("Reconfiguration completion detection plugin", function()
+local function get_log(typ, n)
+  local entries
+  helpers.wait_until(function()
+    local client = assert(helpers.http_client(
+            helpers.mock_upstream_host,
+            helpers.mock_upstream_port
+    ))
+    local res = client:get("/read_log/" .. typ, {
+      headers = {
+        Accept = "application/json"
+      }
+    })
+    local raw = assert.res_status(200, res)
+    local body = cjson.decode(raw)
+
+    entries = body.entries
+    return #entries > 0
+  end, 10)
+  if n then
+    assert(#entries == n, "expected " .. n .. " log entries, but got " .. #entries)
+  end
+  return entries
+end
+
+describe("Reconfiguration completion detection", function()
 
   local STATE_UPDATE_FREQUENCY = .2
 
@@ -12,19 +36,6 @@ describe("Reconfiguration completion detection plugin", function()
   local function plugin_tests()
 
     local configuration_version = utils.uuid()
-
-    local res = admin_client:post("/plugins", {
-      body = {
-        name = "reconfiguration-completion",
-        config = {
-          version = configuration_version,
-        }
-      },
-      headers = { ["Content-Type"] = "application/json" },
-    })
-    local body = assert.res_status(201, res)
-    local plugin = cjson.decode(body)
-    local reconfiguration_completion_plugin_id = plugin.id
 
     res = admin_client:post("/plugins", {
       body = {
@@ -41,7 +52,7 @@ describe("Reconfiguration completion detection plugin", function()
     res = admin_client:post("/services", {
       body = {
         name = "test-service",
-        url = "http://127.0.0.1",
+        url = helpers.mock_upstream_url,
       },
       headers = { ["Content-Type"] = "application/json" },
     })
@@ -51,18 +62,20 @@ describe("Reconfiguration completion detection plugin", function()
     -- We're running the route setup in `eventually` to cover for the unlikely case that reconfiguration completes
     -- between adding the route, updating the plugin and requesting the path through the proxy path.
 
-    local next_path do
+    local next_path_suffix do
       local path_suffix = 0
-      function next_path()
+      function next_path_suffix()
         path_suffix = path_suffix + 1
-        return "/" .. tostring(path_suffix)
+        return tostring(path_suffix)
       end
     end
 
+    local path_suffix
     local service_path
 
     assert.eventually(function()
-      service_path = next_path()
+      path_suffix = next_path_suffix()
+      service_path = "/" .. path_suffix
 
       res = admin_client:post("/services/" .. service.id .. "/routes", {
         body = {
@@ -70,23 +83,33 @@ describe("Reconfiguration completion detection plugin", function()
         },
         headers = { ["Content-Type"] = "application/json" },
       })
-      assert.res_status(201, res)
+      body = assert.res_status(201, res)
+      local route = cjson.decode(body)
 
-      configuration_version = utils.uuid()
-      res = admin_client:patch("/plugins/" .. reconfiguration_completion_plugin_id, {
+      kong_transaction_id = res.headers['kong-test-transaction-id']
+      assert.is_string(kong_transaction_id)
+
+      res = admin_client:post("/routes/" .. route.id .. "/plugins", {
         body = {
+          name = "http-log",
           config = {
-            version = configuration_version,
+            http_endpoint = "http://" .. helpers.mock_upstream_host
+                    .. ":"
+                    .. helpers.mock_upstream_port
+                    .. "/post_log/reconf" .. path_suffix
           }
         },
         headers = { ["Content-Type"] = "application/json" },
       })
-      assert.res_status(200, res)
+      assert.res_status(201, res)
+
+      kong_transaction_id = res.headers['kong-test-transaction-id']
+      assert.is_string(kong_transaction_id)
 
       res = proxy_client:get(service_path,
               {
                 headers = {
-                  ["If-Kong-Configuration-Version"] = configuration_version
+                  ["If-Kong-Configuration-Version"] = kong_transaction_id
                 }
               })
       assert.res_status(503, res)
@@ -101,22 +124,28 @@ describe("Reconfiguration completion detection plugin", function()
       res = proxy_client:get(service_path,
               {
                 headers = {
-                  ["If-Kong-Configuration-Version"] = configuration_version
+                  ["If-Kong-Configuration-Version"] = kong_transaction_id
                 }
               })
       body = assert.res_status(200, res)
       assert.equals("kong terminated the request", body)
     end)
             .has_no_error()
+
+    get_log("reconf" .. path_suffix, 1)
+
   end
 
   describe("#traditional mode", function()
     lazy_setup(function()
       helpers.get_db_utils()
       assert(helpers.start_kong({
-        plugins = "bundled,reconfiguration-completion",
         worker_consistency = "eventual",
+        nginx_conf = "spec/fixtures/custom_nginx.template",
+        db_update_frequency = 0.05,
+        db_cache_neg_ttl = 0.01,
         worker_state_update_frequency = STATE_UPDATE_FREQUENCY,
+        worker_state_update_frequency = 0.1,
       }))
       admin_client = helpers.admin_client()
       proxy_client = helpers.proxy_client()
@@ -140,7 +169,7 @@ describe("Reconfiguration completion detection plugin", function()
       helpers.get_db_utils()
 
       assert(helpers.start_kong({
-        plugins = "bundled,reconfiguration-completion",
+        plugins = "bundled",
         role = "control_plane",
         database = "postgres",
         prefix = "cp",
@@ -150,11 +179,14 @@ describe("Reconfiguration completion detection plugin", function()
         cluster_listen = "127.0.0.1:9005",
         cluster_telemetry_listen = "127.0.0.1:9006",
         nginx_conf = "spec/fixtures/custom_nginx.template",
+        db_update_frequency = 0.05,
+        db_cache_neg_ttl = 0.01,
+        worker_consistency = "eventual",
         db_update_frequency = STATE_UPDATE_FREQUENCY,
      }))
 
       assert(helpers.start_kong({
-        plugins = "bundled,reconfiguration-completion",
+        plugins = "bundled",
         role = "data_plane",
         database = "off",
         prefix = "dp",
@@ -164,6 +196,8 @@ describe("Reconfiguration completion detection plugin", function()
         cluster_control_plane = "127.0.0.1:9005",
         cluster_telemetry_endpoint = "127.0.0.1:9006",
         proxy_listen = "0.0.0.0:9002",
+        db_update_frequency = 0.05,
+        db_cache_neg_ttl = 0.01,
         worker_state_update_frequency = STATE_UPDATE_FREQUENCY,
       }))
       admin_client = helpers.admin_client()
