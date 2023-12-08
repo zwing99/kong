@@ -165,8 +165,8 @@ dedicated_config_processing = on
 worker_consistency = eventual
 worker_state_update_frequency = 5
 
-router_flavor = traditional_compatible
-use_fast_regex = NONE
+router_flavor = traditional
+use_fast_regex = on
 
 lua_socket_pool_size = 256
 lua_ssl_trusted_certificate = system
