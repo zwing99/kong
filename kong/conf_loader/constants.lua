@@ -403,6 +403,8 @@ local CONF_PARSERS = {
   },
   worker_state_update_frequency = { typ = "number" },
 
+  use_fast_regex = { typ = "boolean" },
+
   lua_max_req_headers = { typ = "number" },
   lua_max_resp_headers = { typ = "number" },
   lua_max_uri_args = { typ = "number" },

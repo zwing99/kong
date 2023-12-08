@@ -7,6 +7,8 @@ local bit           = require "bit"
 local utils         = require "kong.router.utils"
 
 
+--local now           = ngx.now
+--local update_time   = ngx.update_time
 local setmetatable  = setmetatable
 local is_http       = ngx.config.subsystem == "http"
 local get_method    = ngx.req.get_method
@@ -45,6 +47,9 @@ local get_service_info     = utils.get_service_info
 local add_debug_headers    = utils.add_debug_headers
 local get_upstream_uri_v0  = utils.get_upstream_uri_v0
 local route_match_stat     = utils.route_match_stat
+
+
+local PCRE_REGEX_SIZE_LIMIT = 37000
 
 
 -- limits regex degenerate times to the low miliseconds
@@ -1335,6 +1340,52 @@ local function find_match(ctx)
 end
 
 
+local function index_regex(regex, i)
+  return "(?<_I_" .. i .. ">" ..(regex:gsub("%?<([A-Za-z0-9_]+)>", function(name)
+    return "?<" .. name .. "_N_" .. i .. ">"
+  end)) .. ")"
+end
+
+
+local function build_mega_regexes(regex_list)
+  local mega_regexes = {}
+  local uniques = {}
+  local n = regex_list[0]
+  local added = 0
+
+  while added < n do
+    local mega_regex = { "(" }
+    local len = 3
+    local first = true
+    for i = added + 1, n do
+      local re = regex_list[i].regex
+      if not uniques[re] then
+        uniques[re] = true
+
+        local r = index_regex(re, i)
+        if len + #r > PCRE_REGEX_SIZE_LIMIT then
+          break
+        end
+
+        if first then
+          first = false
+        else
+          table.insert(mega_regex, "|")
+        end
+
+        table.insert(mega_regex, r)
+        len = len + #r + 1
+      end
+      added = added + 1
+    end
+
+    table.insert(mega_regex, ")")
+    table.insert(mega_regexes, table.concat(mega_regex))
+  end
+  return mega_regexes
+end
+
+
 local _M = { DEFAULT_MATCH_LRUCACHE_SIZE = DEFAULT_MATCH_LRUCACHE_SIZE }
 
 
@@ -1386,6 +1437,9 @@ function _M.new(routes, cache, cache_neg)
   if not cache_neg then
     cache_neg = lrucache.new(DEFAULT_MATCH_LRUCACHE_SIZE)
   end
+
+  local mega_regexes
+  local n_mega_regexes
 
   -- index routes
 
@@ -1450,6 +1504,13 @@ function _M.new(routes, cache, cache_neg)
       index_route_t(route_t, plain_indexes, prefix_uris, regex_uris,
                     wildcard_hosts, src_trust_funcs, dst_trust_funcs)
     end
+  end
+
+
+  local use_fast_regex = kong.configuration.use_fast_regex
+  if use_fast_regex then
+    mega_regexes = build_mega_regexes(regex_uris)
+    n_mega_regexes = #mega_regexes
   end
 
 
@@ -1654,19 +1715,49 @@ function _M.new(routes, cache, cache_neg)
     -- uri match
 
     if match_regex_uris then
-      for i = 1, regex_uris[0] do
-        local from, _, err = re_find(req_uri, regex_uris[i].regex, "ajo")
-        if err then
-          log(ERR, "could not evaluate URI regex: ", err)
-          return
+      --update_time()
+      --local t0 = now()
+      if use_fast_regex then
+        for i = 1, n_mega_regexes do
+          local m, err = re_match(req_uri, mega_regexes[i], "ajo")
+          if err then
+            log(ERR, "could not evaluate path regex: ", err)
+            return
+          end
+
+          if m then
+            local matched
+            for k, v in pairs(m) do
+              if v ~= false then
+                if type(k) == "string" and k:find("_I_", 1, true) then
+                  matched = tonumber(k:sub(4))
+                  break
+                end
+              end
+            end
+            hits.uri     = regex_uris[matched].value
+            req_category = bor(req_category, MATCH_RULES.URI)
+            break
+          end
         end
 
-        if from then
-          hits.uri     = regex_uris[i].value
-          req_category = bor(req_category, MATCH_RULES.URI)
-          break
+      else
+        for i = 1, regex_uris[0] do
+          local from, _, err = re_find(req_uri, regex_uris[i].regex, "ajo")
+          if err then
+            log(ERR, "could not evaluate path regex: ", err)
+            return
+          end
+
+          if from then
+            hits.uri     = regex_uris[i].value
+            req_category = bor(req_category, MATCH_RULES.URI)
+            break
+          end
         end
       end
+      --update_time()
+      --log(ERR, "regex matching time: ", now() - t0)
     end
 
     if match_uris and not hits.uri then
