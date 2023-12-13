@@ -199,6 +199,22 @@ local function get_expression(route)
     expression_append(expr_buf, LOGICAL_AND, gen)
   end
 
+  gen = gen_for_field("http.path", function(path)
+    return is_regex_magic(path) and OP_REGEX or OP_PREFIX
+  end, paths, function(op, p)
+    if op == OP_REGEX then
+      -- 1. strip leading `~`
+      -- 2. prefix with `^` to match the anchored behavior of the traditional router
+      -- 3. update named capture opening tag for rust regex::Regex compatibility
+      return "^" .. p:sub(2):gsub("?<", "?P<")
+    end
+
+    return p
+  end)
+  if gen then
+    expression_append(expr_buf, LOGICAL_AND, gen)
+  end
+
   if not is_empty_field(hosts) then
     hosts_buf:reset():put("(")
 
@@ -227,22 +243,6 @@ local function get_expression(route)
 
     expression_append(expr_buf, LOGICAL_AND,
                       hosts_buf:put(")"):get())
-  end
-
-  gen = gen_for_field("http.path", function(path)
-    return is_regex_magic(path) and OP_REGEX or OP_PREFIX
-  end, paths, function(op, p)
-    if op == OP_REGEX then
-      -- 1. strip leading `~`
-      -- 2. prefix with `^` to match the anchored behavior of the traditional router
-      -- 3. update named capture opening tag for rust regex::Regex compatibility
-      return "^" .. p:sub(2):gsub("?<", "?P<")
-    end
-
-    return p
-  end)
-  if gen then
-    expression_append(expr_buf, LOGICAL_AND, gen)
   end
 
   if not is_empty_field(headers) then
@@ -476,10 +476,10 @@ end
 
 
 local function get_exp_and_priority(route)
-  if route.expression then
-    ngx.log(ngx.ERR, "expecting a traditional route while it's not (probably an expressions route). ",
-                     "Likely it's a misconfiguration. Please check the 'router_flavor' config in kong.conf")
-  end
+  --if route.expression then
+  --  ngx.log(ngx.ERR, "expecting a traditional route while it's not (probably an expressions route). ",
+  --                   "Likely it's a misconfiguration. Please check the 'router_flavor' config in kong.conf")
+  --end
 
   local exp      = get_expression(route)
   local priority = get_priority(route)

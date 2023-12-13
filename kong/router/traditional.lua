@@ -1397,10 +1397,10 @@ function _M.new(routes, cache, cache_neg)
 
       local route = routes[i]
       local r = routes[i].route
-      if r.expression then
-        ngx_log(ngx_ERR, "expecting a traditional route while expression is given. ",
-                    "Likely it's a misconfiguration. Please check router_flavor")
-      end
+      --if r.expression then
+      --  ngx_log(ngx_ERR, "expecting a traditional route while expression is given. ",
+      --              "Likely it's a misconfiguration. Please check router_flavor")
+      --end
 
       if r.id ~= nil then
         routes_by_id[r.id] = route

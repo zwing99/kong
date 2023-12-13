@@ -8,6 +8,7 @@ local router = require("resty.router.router")
 local context = require("resty.router.context")
 local lrucache = require("resty.lrucache")
 local server_name = require("ngx.ssl").server_name
+local ngx_re_split = require("ngx.re").split
 local tb_new = require("table.new")
 local utils = require("kong.router.utils")
 local yield = require("kong.tools.yield").yield
@@ -65,9 +66,11 @@ do
                   "http.path",
                   "http.headers.*",
                   "http.queries.*",
+                  "http.path.segments.*",
                  },
 
     ["Int"]    = {"net.port",
+                  "http.path.segments_n",
                  },
   }
 
@@ -193,9 +196,11 @@ local function categorize_fields(fields)
   local basic = {}
   local headers = {}
   local queries = {}
+  local segments = {}
 
   -- 13 bytes, same len for "http.queries."
   local PREFIX_LEN = 13 -- #"http.headers."
+  local PREFIX_SEGMENTS = "http.path.segments."
 
   for _, field in ipairs(fields) do
     local prefix = field:sub(1, PREFIX_LEN)
@@ -206,12 +211,15 @@ local function categorize_fields(fields)
     elseif prefix == "http.queries." then
       queries[field:sub(PREFIX_LEN + 1)] = field
 
+    elseif field:sub(1, #PREFIX_SEGMENTS) == PREFIX_SEGMENTS then
+      segments[field:sub(#PREFIX_SEGMENTS + 1)] = field  -- [0] = http.path.segments.0
+
     else
       table.insert(basic, field)
     end
   end
 
-  return basic, headers, queries
+  return basic, headers, queries, segments
 end
 
 
@@ -253,16 +261,18 @@ local function new_from_scratch(routes, get_exp_and_priority)
     yield(true, phase)
   end
 
-  local fields, header_fields, query_fields = categorize_fields(inst:get_fields())
+  local fields, header_fields, query_fields, segments_fields = categorize_fields(inst:get_fields())
 
   return setmetatable({
       schema = CACHED_SCHEMA,
+      context = context.new(CACHED_SCHEMA),
       router = inst,
       routes = routes_t,
       services = services_t,
       fields = fields,
       header_fields = header_fields,
       query_fields = query_fields,
+      segments_fields = segments_fields,
       updated_at = new_updated_at,
       rebuilding = false,
     }, _MT)
@@ -344,11 +354,12 @@ local function new_from_previous(routes, get_exp_and_priority, old_router)
     yield(true, phase)
   end
 
-  local fields, header_fields, query_fields = categorize_fields(inst:get_fields())
+  local fields, header_fields, query_fields, segments_fields = categorize_fields(inst:get_fields())
 
   old_router.fields = fields
   old_router.header_fields = header_fields
   old_router.query_fields = query_fields
+  old_router.segments_fields = segments_fields
   old_router.updated_at = new_updated_at
   old_router.rebuilding = false
 
@@ -442,9 +453,11 @@ function _M:select(req_method, req_uri, req_host, req_scheme,
                       nil, nil,
                       sni, req_headers, req_queries)
 
-  local c = context.new(self.schema)
+  local c = self.context
+  c:reset()
 
   local host, port = split_host_port(req_host)
+  local segments = ngx_re_split(req_uri, "/", "jo")
 
   for _, field in ipairs(self.fields) do
     if field == "http.method" then
@@ -474,12 +487,37 @@ function _M:select(req_method, req_uri, req_host, req_scheme,
         return nil, err
       end
 
+    elseif field == "http.path.segments_n" then
+      assert(c:add_value("http.path.segments_n", #segments - 1))
+
     else  -- unknown field
       error("unknown router matching schema field: " .. field)
 
     end -- if field
 
   end   -- for self.fields
+
+  if not is_empty_field(self.segments_fields) then
+    for s, field in pairs(self.segments_fields) do
+      local start, last = s:find("_", 0, true)
+
+      if start then
+        start = s:sub(1, start - 1)
+        last = s:sub(last + 1)
+        local s = {}
+        for i = start + 2, last + 2 do
+          table.insert(s, segments[i])
+        end
+
+        assert(c:add_value(field, table.concat(s, "/")))
+
+      else
+        local pos = tonumber(s) + 2
+        local v = segments[pos]
+        assert(c:add_value(field, v))
+      end
+    end
+  end
 
   if req_headers then
     for h, field in pairs(self.header_fields) do
