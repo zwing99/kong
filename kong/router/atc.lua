@@ -32,6 +32,11 @@ local ngx_log       = ngx.log
 local get_phase     = ngx.get_phase
 local ngx_ERR       = ngx.ERR
 
+local get_method    = ngx.req.get_method
+local get_headers   = ngx.req.get_headers
+local get_uri_args  = ngx.req.get_uri_args
+local server_name   = require("ngx.ssl").server_name
+
 
 local check_select_params  = utils.check_select_params
 local get_service_info     = utils.get_service_info
@@ -464,6 +469,76 @@ function _M:select(req_method, req_uri, req_host, req_scheme,
 end
 
 
+local get_headers_key
+local get_queries_key
+do
+  local tb_sort = table.sort
+  local tb_concat = table.concat
+
+  local str_buf = buffer.new(64)
+
+  get_headers_key = function(headers)
+    str_buf:reset()
+
+    -- NOTE: DO NOT yield until str_buf:get()
+    for name, value in pairs(headers) do
+      local name = name:gsub("-", "_"):lower()
+
+      if type(value) == "table" then
+        for i, v in ipairs(value) do
+          value[i] = v:lower()
+        end
+        tb_sort(value)
+        value = tb_concat(value, ", ")
+
+      else
+        value = value:lower()
+      end
+
+      str_buf:putf("|%s=%s", name, value)
+    end
+
+    return str_buf:get()
+  end
+
+  get_queries_key = function(queries)
+    str_buf:reset()
+
+    -- NOTE: DO NOT yield until str_buf:get()
+    for name, value in pairs(queries) do
+      if type(value) == "table" then
+        tb_sort(value)
+        value = tb_concat(value, ", ")
+      end
+
+      str_buf:putf("|%s=%s", name, value)
+    end
+
+    return str_buf:get()
+  end
+end
+
+
+-- func => get_headers or get_uri_args
+-- name => "headers" or "queries"
+-- max_config_option => "lua_max_req_headers" or "lua_max_uri_args"
+local function get_http_params(func, name, max_config_option)
+  local params, err = func()
+  if err == "truncated" then
+    local max = kong and kong.configuration and kong.configuration[max_config_option] or 100
+    ngx_log(ngx_ERR,
+            string.format("router: not all request %s were read in order to determine the route " ..
+                          "as the request contains more than %d %s, " ..
+                          "route selection may be inaccurate, " ..
+                          "consider increasing the '%s' configuration value " ..
+                          "(currently at %d)",
+                          name, max, name, max_config_option, max))
+  end
+
+  return params
+end
+
+
 function _M:exec(ctx)
   local fields = self.fields
 
@@ -471,6 +546,28 @@ function _M:exec(ctx)
   local req_host = var.http_host
 
   req_uri = strip_uri_args(req_uri)
+
+  --[[
+  local req_method = get_method()
+  local sni = server_name()
+  local headers, headers_key, queries_key
+  --if not is_empty_field(self.header_fields) then
+    headers = get_http_params(get_headers, "headers", "lua_max_req_headers")
+
+    headers["host"] = nil
+
+    headers_key = get_headers_key(headers)
+  --end
+
+  local cache_key = (req_method  or "") .. "|" ..
+                    (req_uri     or "") .. "|" ..
+                    (req_host    or "") .. "|" ..
+                    (sni         or "") .. "|" ..
+                    (headers_key or "") .. "|" ..
+                    (queries_key or "")
+
+  --print("cache_key = ", cache_key)
+  --]]
 
   -- cache key calculation
 
@@ -480,10 +577,12 @@ function _M:exec(ctx)
 
   CACHE_PARAMS:clear()
 
+  ----[[
   CACHE_PARAMS.uri  = req_uri
   CACHE_PARAMS.host = req_host
 
   local cache_key = fields:get_cache_key(CACHE_PARAMS)
+  --]]
 
   -- cache lookup
 
@@ -494,6 +593,8 @@ function _M:exec(ctx)
       return nil
     end
 
+  --CACHE_PARAMS.uri  = req_uri
+  --CACHE_PARAMS.host = req_host
     CACHE_PARAMS.scheme = ctx and ctx.scheme or var.scheme
 
     local err
@@ -671,6 +772,18 @@ function _M._set_ngx(mock_ngx)
   if mock_ngx.log then
     ngx_log = mock_ngx.log
   end
+
+    if mock_ngx.req.get_method then
+      get_method = mock_ngx.req.get_method
+    end
+
+    if mock_ngx.req.get_headers then
+      get_headers = mock_ngx.req.get_headers
+    end
+
+    if mock_ngx.req.get_uri_args then
+      get_uri_args = mock_ngx.req.get_uri_args
+    end
 
   -- unit testing
   fields._set_ngx(mock_ngx)

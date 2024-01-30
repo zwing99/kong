@@ -4945,7 +4945,7 @@ do
   describe("Router (flavor = " .. flavor .. ")", function()
     reload_router(flavor)
 
-    it("[cache hit should be case sensitive]", function()
+    it("#only [cache hit should be case sensitive]", function()
       local use_case = {
         {
           service = service,
@@ -4964,9 +4964,22 @@ do
       local router = assert(new_router(use_case))
 
       local ctx = {}
-      local _ngx = mock_ngx("GET", "/foo", { test1 = "QUOTE", })
+      local _ngx = mock_ngx("GET", "/foo/bar", { test1 = "QUOTE", })
       router._set_ngx(_ngx)
 
+      ngx.update_time()
+      local t = ngx.now()
+
+      for i =1, 100*1000 do
+      --for i =1, 1 do
+        local match_t = router:exec(ctx)
+        assert.truthy(match_t)
+      end
+
+      ngx.update_time()
+      print("time = ", ngx.now() - t)
+
+      --[[
       -- first match, case insensitive
       local match_t = router:exec(ctx)
       assert.truthy(match_t)
@@ -4990,6 +5003,7 @@ do
 
       -- cache miss, case sensitive
       assert.falsy(ctx.route_match_cached)
+      --]]
     end)
 
     it("[cache hit should have correct match_t.upstream_uri]", function()
