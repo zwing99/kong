@@ -74,6 +74,11 @@ end
 local flavor = "traditional_compatible"
 reload_router(flavor)
 
+local service = {
+  name = "service-invalid",
+  protocol = "http",
+}
+
 local use_case = {
   {
     service = service,
