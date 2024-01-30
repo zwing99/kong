@@ -547,7 +547,7 @@ function _M:exec(ctx)
 
   req_uri = strip_uri_args(req_uri)
 
-  --[[
+  ----[[
   local req_method = get_method()
   local sni = server_name()
   local headers, headers_key, queries_key
@@ -577,12 +577,12 @@ function _M:exec(ctx)
 
   CACHE_PARAMS:clear()
 
-  ----[[
   CACHE_PARAMS.uri  = req_uri
   CACHE_PARAMS.host = req_host
 
-  local cache_key = fields:get_cache_key(CACHE_PARAMS)
-  --]]
+  --local cache_key = fields:get_cache_key(CACHE_PARAMS)
+
+  do return end
 
   -- cache lookup
 
