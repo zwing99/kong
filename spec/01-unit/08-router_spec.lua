@@ -4970,10 +4970,10 @@ do
       ngx.update_time()
       local t = ngx.now()
 
-      for i =1, 100*1000 do
+      for i =1, 1000*1000 do
       --for i =1, 1 do
         local match_t = router:exec(ctx)
-        --assert.truthy(match_t)
+        assert.truthy(match_t)
       end
 
       ngx.update_time()
