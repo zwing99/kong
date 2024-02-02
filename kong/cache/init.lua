@@ -96,6 +96,7 @@ function _M.new(opts)
     log(ERR, "shared dictionary ", shm_miss_name, " not found")
   end
 
+  local subscription_channel = opts.subscription_channel or "invalidations"
   local ttl = max(opts.ttl or 3600, 0)
   local neg_ttl = max(opts.neg_ttl or 300, 0)
   local worker_events = opts.worker_events
@@ -140,8 +141,14 @@ function _M.new(opts)
     neg_ttl        = neg_ttl,
   }
 
-  local ok, err = cluster_events:subscribe("invalidations", function(key)
-    log(DEBUG, "received invalidate event from cluster for key: '", key, "'")
+  local ok, err = cluster_events:subscribe(subscription_channel, opts.cb or function(key)
+    -- TODO: I think this is useless by now.
+    if type(key) ~= "string" then
+      log(ERR, "invalid key received from cluster invalidations")
+      key = key.id
+    elseif type(key) == "string" then
+      log(DEBUG, "received invalidate event from cluster for key: '", key, "'")
+    end
     self:invalidate_local(key)
   end)
   if not ok then
