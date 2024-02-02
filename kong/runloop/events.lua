@@ -465,29 +465,6 @@ local function register_for_db()
   register_balancer_events()
 end
 
-local dao_crud_handler_poc = function(data)
-  print("DAO CRUD HANDLER")
-  local schema_name = data.schema.name
-
-  -- by default use the `id`
-  local key = data.id
-  if schema_name == "keyauth_credentials" then
-    -- keyauth credentials are cached by the key
-    key = data.key
-  end
-
-  print("data = " .. require("inspect")(data))
-  local cache_key = db[schema_name]:cache_key(key, nil, nil, nil, nil, data.ws_id)
-  local cache_obj = kong[ENTITY_CACHE_STORE[schema_name]]
-
-  if cache_key then
-    print("actually invalidating cache_key = " .. cache_key)
-    -- send invalidate worker_event. Every worker will invalidate its own cache
-    -- as each cache is subscribed to this event and calls `invadate_local(key)`
-    cache_obj:invalidate(cache_key)
-  end
-end
-
 local function register_for_dbless(reconfigure_handler)
   -- initialize local local_events hooks
 
@@ -497,21 +474,6 @@ local function register_for_dbless(reconfigure_handler)
   cluster_events = assert(kong.cluster_events)
 
   subscribe_worker_events("declarative", "reconfigure", reconfigure_handler)
-
-
-  -- FIXME: These events are being overwritten. The `callbacks` table is being
-  -- in the `cluster_events` object is getting flushed while startup.
-  -- These don't work for now, but this feels like the right approach to me.
-  subscribe_cluster_events("clustering:consumers", function(data)
-    print("Susbscribing consumer event")
-    data.schema = { name = "consumers" }
-    dao_crud_handler_poc(data)
-  end)
-  subscribe_cluster_events("clustering:keyauth_credentials", function(data)
-    print("Susbscribing keyauth event")
-    data.schema = { name = "keyauth_credentials" }
-    dao_crud_handler_poc(data)
-  end)
 end
 
 
