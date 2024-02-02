@@ -485,14 +485,14 @@ local function register_for_dbless(reconfigure_handler)
 
   subscribe_worker_events("declarative", "reconfigure", reconfigure_handler)
 
-  -- subscribe_cluster_events("clustering:consumers", function(data)
-  --   data.schema = { name = "consumers" }
-  --   dao_crud_handler_poc(data)
-  -- end)
-  -- subscribe_cluster_events("clustering:keyauth_credentials", function(data)
-  --   data.schema = { name = "keyauth_credentials" }
-  --   dao_crud_handler_poc(data)
-  -- end)
+  subscribe_cluster_events("clustering:consumers", function(data)
+    data.schema = { name = "consumers" }
+    dao_crud_handler_poc(data)
+  end)
+  subscribe_cluster_events("clustering:keyauth_credentials", function(data)
+    data.schema = { name = "keyauth_credentials" }
+    dao_crud_handler_poc(data)
+  end)
 end
 
 
