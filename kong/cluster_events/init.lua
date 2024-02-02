@@ -175,7 +175,7 @@ end
 
 
 function _M:subscribe(channel, cb, start_polling)
-  print("channel = " .. require("inspect")(channel))
+  print("XXX: subscribing to channel = " .. require("inspect")(channel))
   log(DEBUG, require("inspect")(channel))
   if type(channel) ~= "string" then
     return error("channel must be a string")
@@ -186,6 +186,7 @@ function _M:subscribe(channel, cb, start_polling)
   end
 
   if not self.callbacks[channel] then
+    print("XXX: adding callback to channel")
     self.callbacks[channel] = { cb }
 
     insert(self.channels, channel)
@@ -200,7 +201,7 @@ function _M:subscribe(channel, cb, start_polling)
 
   if not self.polling and start_polling and self.use_polling then
     -- start recurring polling timer
-
+    print("XXX: starting poll handler in timer")
     local ok, err = timer_at(self.poll_interval, poll_handler, self)
     if not ok then
       return nil, "failed to start polling timer: " .. err
@@ -214,7 +215,6 @@ end
 
 
 local function process_event(self, row, local_start_time)
-  log(DEBUG, require("inspect")(row.data))
   if row.node_id == self.node_id then
     return true
   end
@@ -227,10 +227,11 @@ local function process_event(self, row, local_start_time)
   if ran then
     return true
   end
+  print("row = " .. require("inspect")(row.channel))
 
-  log(DEBUG, "new event (channel: '", row.channel, "') data: '", row.data,
-             "' nbf: '", row.nbf or "none", "' shm exptime: ",
-             self.event_ttl_shm)
+  log(DEBUG, "new event (channel: '", row.channel, "') data: '",
+            "' nbf: '", row.nbf or "none", "' shm exptime: ",
+            self.event_ttl_shm)
 
   -- mark as ran before running in case of long-running callbacks
   local ok, err = self.events_shm:set(row.id, true, self.event_ttl_shm)
@@ -239,6 +240,7 @@ local function process_event(self, row, local_start_time)
   end
 
   local cbs = self.callbacks[row.channel]
+  print("XXX: cbs = " .. require("inspect")(cbs))
   if not cbs then
     return true
   end
@@ -391,6 +393,9 @@ poll_handler = function(premature, self)
   -- single worker
 
   local pok, perr, err = pcall(poll, self)
+  print("perr = " .. require("inspect")(perr))
+  print("pok = " .. require("inspect")(pok))
+  print("err = " .. require("inspect")(err))
   if not pok then
     log(ERR, "poll() threw an error: ", perr)
 

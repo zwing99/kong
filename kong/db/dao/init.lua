@@ -1160,7 +1160,6 @@ function DAO:insert(entity, options)
   -- FIXME: currently the `row` doesn't contain the `ws_id` field, but we need this
   -- in the crud event handler
   row["ws_id"] = ws_id or nil
-  print("row = " .. require("inspect")(row))
   if not row then
     return nil, tostring(err_t), err_t
   end
@@ -1271,8 +1270,6 @@ function DAO:upsert(pk_or_entity, entity, options)
   if not row then
     return nil, tostring(err_t), err_t
   end
-
-  print("row = " .. require("inspect")(row))
 
   -- TODO: figure out why `ws_id` is omitted
   row["ws_id"] = ws_id or nil

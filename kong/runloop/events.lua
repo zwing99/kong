@@ -171,6 +171,7 @@ end
 
 
 local function dao_crud_handler(data)
+  print("data = " .. require("inspect")(data))
   local schema = data.schema
   if not schema then
     log(ERR, "[events] missing schema in crud subscriber")
@@ -402,7 +403,6 @@ local BALANCER_HANDLERS = {
   { "balancer", "upstreams" , balancer_upstreams_handler },
 }
 
-
 local CLUSTER_HANDLERS = {
   -- target updates
   { "balancer:targets"    , cluster_balancer_targets_handler },
@@ -411,7 +411,6 @@ local CLUSTER_HANDLERS = {
   -- upstream updates
   { "balancer:upstreams"  , cluster_balancer_upstreams_handler },
 }
-
 
 local function subscribe_worker_events(source, event, handler)
   worker_events.register(handler, source, event)
@@ -466,12 +465,33 @@ local function register_for_db()
   register_balancer_events()
 end
 
+local dao_crud_handler_poc = function(data)
+  local schema_name = data.schema.name
+
+  local cache_key = db[schema_name]:cache_key(data.id, nil, nil, nil, nil, data.ws_id)
+  local cache_obj = kong[ENTITY_CACHE_STORE[schema_name]]
+
+  if cache_key then
+    print("actually invalidating cache_key = " .. cache_key)
+    cache_obj:invalidate(cache_key)
+  end
+end
 
 local function register_for_dbless(reconfigure_handler)
   -- initialize local local_events hooks
   worker_events = kong.worker_events
+  cluster_events = kong.cluster_events
 
   subscribe_worker_events("declarative", "reconfigure", reconfigure_handler)
+
+  subscribe_cluster_events("clustering:consumers", function(data)
+    data.schema = { name = "consumers" }
+    dao_crud_handler_poc(data)
+  end)
+  subscribe_cluster_events("clustering:keyauth_credentials", function(data)
+    data.schema = { name = "keyauth_credentials" }
+    dao_crud_handler_poc(data)
+  end)
 end
 
 

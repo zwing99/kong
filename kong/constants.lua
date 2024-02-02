@@ -155,7 +155,11 @@ local constants = {
   ENTITY_CACHE_STORE = setmetatable({
     -- take consumers out of core-cache/cache
     -- TODO: find out what this actually does
-    -- consumers = "consumers_cache",
+
+    -- UPDATE: these are used in events.dao_event_handler to determine cache invaldation targets
+    -- where key is schema name and value is cache store name
+    consumers = "consumers_cache",
+    keyauth_credentials = "credentials_cache",
     certificates = "core_cache",
     services = "core_cache",
     routes = "core_cache",
