@@ -1,5 +1,6 @@
 local http      = require "resty.http"
 local cjson = require("cjson.safe")
+local yield = require("kong.tools.yield").yield
 
 local off = {}
 
@@ -29,6 +30,7 @@ function OffStrategy:select_interval(channels, min_at, max_at)
   -- TODO: properly implement pageing
   local url = "http://localhost:8001/clustering/events"
 
+  print("pinging events endpoint")
   local response, err = c:request_uri(url, {
     method = "GET",
     headers = {
@@ -39,6 +41,9 @@ function OffStrategy:select_interval(channels, min_at, max_at)
     return nil, err
   end
   local res = cjson.decode(response.body)
+
+  yield(true)
+
   for i, event in ipairs(res.data) do
     event.now = self:server_time()
     event.data = cjson.decode(event.data)

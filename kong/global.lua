@@ -311,7 +311,7 @@ function _GLOBAL.init_consumers_cache(kong_config, cluster_events, worker_events
     cache_pages     = cache_pages,
     resty_lock_opts = LOCK_OPTS,
     lru_size        = get_lru_size(kong_config),
-    subscription_channel = "clustering:consumers",
+    -- subscription_channel = "clustering:consumers",
     -- TODO:
     -- Instead of having per cache invalidation, we can have a callback
     -- based on `clustering:*` events which selectively invalidate the cache
@@ -347,7 +347,7 @@ function _GLOBAL.init_credentials_cache(kong_config, cluster_events, worker_even
     cache_pages     = cache_pages,
     resty_lock_opts = LOCK_OPTS,
     lru_size        = get_lru_size(kong_config),
-    subscription_channel = "clustering:keyauth_credentials",
+    -- subscription_channel = "clustering:keyauth_credentials",
     -- cb = function(data)
     --   local cache_key = kong.db.keyauth_credentials:cache_key(data.key, nil, nil, nil, nil, data.ws_id)
     --   kong.credentials_cache:invalidate(cache_key)
