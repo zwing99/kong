@@ -112,7 +112,11 @@ function _M.new(opts)
     poll_interval = poll_interval,
     poll_offset   = poll_offset,
     poll_delay    = poll_delay,
-    event_ttl_shm = poll_interval * 2 + poll_offset,
+    -- FIXME: increase the TTL to 5*100 until there is proper support
+    -- for pulling only events from a certain point in time
+    -- right now we pull _all_ events. all the time
+    -- which means that invalidations happen multiple times.
+    event_ttl_shm = poll_interval * 100 + poll_offset,
     node_id       = nil,
     polling       = false,
     channels      = {},
@@ -225,9 +229,9 @@ local function process_event(self, row, local_start_time)
   end
 
   if ran then
+    -- print("not repeating event for row.channel -> " .. row.channel)
     return true
   end
-  print("row = " .. require("inspect")(row.channel))
 
   log(DEBUG, "new event (channel: '", row.channel, "') data: '",
             "' nbf: '", row.nbf or "none", "' shm exptime: ",
@@ -235,12 +239,17 @@ local function process_event(self, row, local_start_time)
 
   -- mark as ran before running in case of long-running callbacks
   local ok, err = self.events_shm:set(row.id, true, self.event_ttl_shm)
+  if not row.channel == "clustering:clustering_data_planes" then
+    print("XXX: successfully set event as ran = " .. tostring(ok) .. " err = " .. tostring(err) .. "id -> " .. row.id)
+  end
   if not ok then
     return nil, "failed to mark event as ran: " .. err
   end
 
   local cbs = self.callbacks[row.channel]
-  print("XXX: cbs = " .. require("inspect")(cbs))
+  if not row.channel == "clustering:clustering_data_planes" then
+    print("XXX: cbs for channel = ".. row.channel .. require("inspect")(cbs))
+  end
   if not cbs then
     return true
   end
@@ -393,9 +402,6 @@ poll_handler = function(premature, self)
   -- single worker
 
   local pok, perr, err = pcall(poll, self)
-  print("perr = " .. require("inspect")(perr))
-  print("pok = " .. require("inspect")(pok))
-  print("err = " .. require("inspect")(err))
   if not pok then
     log(ERR, "poll() threw an error: ", perr)
 
