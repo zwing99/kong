@@ -166,8 +166,8 @@ function _M:broadcast(channel, data, delay)
 
   -- insert event row
 
-  log(DEBUG, "broadcasting on channel: '", channel, "' data: ", data,
-            " with delay: ", delay and delay or "none")
+  -- log(DEBUG, "broadcasting on channel: '", channel, "' data: ", data,
+  --           " with delay: ", delay and delay or "none")
 
   local ok, err = self.strategy:insert(self.node_id, channel, nil, data, delay)
   if not ok then
@@ -198,7 +198,10 @@ function _M:subscribe(channel, cb, start_polling)
   else
     insert(self.callbacks[channel], cb)
   end
+  print("self.callbacks[channel] = " .. require("inspect")(self.callbacks[channel]))
 
+
+  print("self.callbacks[channel] = " .. require("inspect")(self.callbacks[channel]))
   if start_polling == nil then
     start_polling = true
   end
@@ -246,13 +249,14 @@ local function process_event(self, row, local_start_time)
     return nil, "failed to mark event as ran: " .. err
   end
 
+  print("finding callbacks for `row.channel` -> " .. row.channel)
+  print("row.channel = " .. require("inspect")(row.channel))
   local cbs = self.callbacks[row.channel]
-  if not row.channel == "clustering:clustering_data_planes" then
-    print("XXX: cbs for channel = ".. row.channel .. require("inspect")(cbs))
-  end
+  print("cbs = " .. require("inspect")(cbs))
   if not cbs then
     return true
   end
+  print("do we have cbs here?")
 
   for j = 1, #cbs do
     local delay
@@ -266,13 +270,17 @@ local function process_event(self, row, local_start_time)
     if delay and delay > 0 then
       log(DEBUG, "delaying nbf event by ", delay, "s")
 
+      print("executing callback")
       local ok, err = timer_at(delay, nbf_cb_handler, cbs[j], row.data)
+      print("callback ok = " .. tostring(ok) .. " err = " .. tostring(err))
       if not ok then
         log(ERR, "failed to schedule nbf event timer: ", err)
       end
 
     else
+      print("executing callback")
       local ok, err = pcall(cbs[j], row.data)
+      print("callback ok = " .. tostring(ok) .. " err = " .. tostring(err))
       if not ok and not ngx_debug then
         log(ERR, "callback threw an error: ", err)
       end
@@ -313,6 +321,8 @@ local function poll(self)
     end
 
     local count = #rows
+
+    print("XXX: count = " .. require("inspect")(count))
 
     if page == 1 and rows[1].now then
       local ok, err = self.shm:safe_set(CURRENT_AT_KEY, rows[1].now)

@@ -143,12 +143,7 @@ function _M.new(opts)
 
   local ok, err = cluster_events:subscribe(subscription_channel, opts.cb or function(key)
     -- TODO: I think this is useless by now.
-    if type(key) ~= "string" then
-      log(ERR, "invalid key received from cluster invalidations")
-      key = key.id
-    elseif type(key) == "string" then
-      log(DEBUG, "received invalidate event from cluster for key: '", key, "'")
-    end
+    log(DEBUG, "received invalidate event from cluster for key: '", key, "'")
     self:invalidate_local(key)
   end)
   if not ok then

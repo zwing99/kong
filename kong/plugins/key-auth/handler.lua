@@ -82,7 +82,7 @@ local function load_credential(key)
 
     -- UPDATE: Fixed by inserting the `ws_id` to the create event. Not sure about the impact.
 
-    return nil, nil -- -1
+    return nil, nil, -1
   end
 
   return cred, nil, cred.ttl
