@@ -38,55 +38,14 @@ local ERR_INVALID_PLUGIN_CONF = { status = 500, message = "Invalid plugin config
 local ERR_UNEXPECTED          = { status = 500, message = "An unexpected error occurred" }
 
 
+-- XXX: HACK
+local keyauth_credentials = require("kong.db.strategies.off.keyauth_credentials")
 local function load_credential(key)
-  -- XXX: HACK
-  -- Something is off with overloading of the select function in non-core daos.
-  -- local cred, err = kong.db.keyauth_credentials:select_by_key(key)
-
-  local c = http.new()
-
-  local url = "http://localhost:8001/key-auths/" .. key
-
-  local response, err = c:request_uri(url, {
-    method = "GET",
-    headers = {
-      ["Content-Type"] = "application/json",
-    },
-  })
-  if err then
-    return nil, err
-  end
-
-  local cred = cjson.decode(response.body)
-
-  -- XXX: For whatever reason, this forces the function to return? Why?
-  -- print("kong.db.keyauth_credentials = " .. require("inspect")(kong.db.keyauth_credentials:select("xxx")))
-
-  if cred.ttl == 0 then
-    kong.log.debug("key expired")
-
-    return nil
-  end
-  print("XXX: FETCHING KEYAUTH CREDENTIAL FROM CP")
-  -- Leave this until we moved to tcp coms
-  if cred.message == "Not found" then
-    -- FIXME: -1 to indicate that the return `value` should not be cached.
-    -- this is just a workaround for now due to this scenario:
-
-    -- when deleting a consumer/key, it is being removed from the cache
-    -- when querying for this consumer(by key), we want to return `nil` (unauthorized)
-    -- This should be cached to avoid querying the DB for every request. (DOS angle)
-
-    -- When a new consumer with this key is created we currently can't invalidate the
-    -- `nil` cache for this key as the `create` event doesn't pass the `ws_id`.
-
-    -- UPDATE: Fixed by inserting the `ws_id` to the create event. Not sure about the impact.
-
-    return nil, nil, -1
-  end
-
-  return cred, nil, cred.ttl
+  -- Something is off with overloading functions in non-core daos.
+  -- Postpone this to later
+  return keyauth_credentials:select(key)
 end
+--- XXX: HACK END
 
 
 local function set_consumer(consumer, credential)

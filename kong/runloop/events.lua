@@ -171,7 +171,6 @@ end
 
 
 local function dao_crud_handler(data)
-  print("data = " .. require("inspect")(data))
   local schema = data.schema
   if not schema then
     log(ERR, "[events] missing schema in crud subscriber")

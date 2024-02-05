@@ -5,18 +5,11 @@ local cjson    = require "cjson.safe"
 
 local KeyauthCredentials = {}
 
-function KeyauthCredentials:select(id)
-  -- Retrieve a key-auth credential by id from the admin api :8001/key-auths/:id
-  print("XXX: id= " .. require("inspect")(id))
+function KeyauthCredentials:select(key)
+
   local c = http.new()
 
-  print("XXXXXXXXX: id = " .. require("inspect")(id))
-  id = id.id or id
-  if not id then
-    return nil, "id is required"
-  end
-
-  local url = "http://localhost:8001/key-auths/" .. id
+  local url = "http://localhost:8001/key-auths/" .. key
 
   local response, err = c:request_uri(url, {
     method = "GET",
@@ -28,15 +21,19 @@ function KeyauthCredentials:select(id)
     return nil, err
   end
 
-  local res = cjson.decode(response.body)
-  print("res = " .. require("inspect")(res))
+  local cred = cjson.decode(response.body)
 
-  return res
-end
+  if cred.ttl == 0 then
+    kong.log.debug("key expired")
 
-function KeyauthCredentials:select_by_key(xx)
-  print("XXXXXX: xx = " .. require("inspect")(xx))
-  return nil, "not implemented"
+    return nil
+  end
+  print("XXX: FETCHING KEYAUTH CREDENTIAL FROM CP")
+  if cred.message == "Not found" then
+    return nil, nil -- -1
+  end
+
+  return cred, nil, cred.ttl
 end
 
 return KeyauthCredentials

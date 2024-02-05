@@ -1465,6 +1465,8 @@ function DAO:row_to_entity(row, options)
     end
   end
 
+  -- print("self.schema = " .. require("inspect")(self.schema))
+  -- print("entity = " .. require("inspect")(entity))
   return entity
 end
 
