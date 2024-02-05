@@ -102,10 +102,7 @@ local function export_from_db_impl(emitter, skip_ws, skip_disabled_entities, exp
 
   for _, dao in pairs(db.daos) do
     if not (skip_ws and dao.schema.name == "workspaces") then
-      -- if dao.schema.name ~= "consumers" then
-      --   -- this will make the keyauth_credentials flatting fail, which is good for this POC
-        insert(schemas, dao.schema)
-      -- end
+      insert(schemas, dao.schema)
     end
   end
 

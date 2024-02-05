@@ -160,6 +160,7 @@ local constants = {
     -- where key is schema name and value is cache store name
     consumers = "consumers_cache",
     keyauth_credentials = "credentials_cache",
+    basicauth_credentials = "credentials_cache",
     certificates = "core_cache",
     services = "core_cache",
     routes = "core_cache",

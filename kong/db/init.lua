@@ -84,7 +84,6 @@ function DB.new(kong_config, strategy)
       end
     end
 
-
     -- XXX: HACK
     local entity_name = "key-auth"
     local key_auth_schema = require("kong.plugins.key-auth.daos")[1]

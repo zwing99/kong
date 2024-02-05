@@ -1,6 +1,5 @@
 local http      = require "resty.http"
 local cjson = require("cjson.safe")
-local yield = require("kong.tools.yield").yield
 
 local off = {}
 
