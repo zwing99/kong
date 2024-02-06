@@ -10,6 +10,7 @@ return {
     workspaceable = true,
     admin_api_name = "basic-auths",
     admin_api_nested_name = "basic-auth",
+    db_export = false,
     fields = {
       { id = typedefs.uuid },
       { created_at = typedefs.auto_timestamp_s },

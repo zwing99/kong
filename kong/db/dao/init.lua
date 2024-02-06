@@ -1158,7 +1158,9 @@ function DAO:insert(entity, options)
 
   row, err_t = run_hook("dao:insert:post", row, self.schema.name, options, ws_id)
   -- FIXME: currently the `row` doesn't contain the `ws_id` field, but we need this
-  -- in the crud event handler
+  -- in the crud event handler.
+  -- UPDATE: there is `show_ws_id` option, but it's not used here, maybe it this is the way
+  -- forward to fix this hack
   row["ws_id"] = ws_id or nil
   if not row then
     return nil, tostring(err_t), err_t
@@ -1465,8 +1467,6 @@ function DAO:row_to_entity(row, options)
     end
   end
 
-  -- print("self.schema = " .. require("inspect")(self.schema))
-  -- print("entity = " .. require("inspect")(entity))
   return entity
 end
 
