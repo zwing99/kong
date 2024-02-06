@@ -33,6 +33,8 @@ function OffStrategy:select_interval(channels, min_at, max_at)
 
   local page = 0
   local last_page
+
+  -- TODO: this will be replaced by a a proper long-living connection
   return function()
 
     if last_page then

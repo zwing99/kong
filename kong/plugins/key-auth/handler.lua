@@ -1,10 +1,6 @@
 local constants = require "kong.constants"
 local kong_meta = require "kong.meta"
 
-local http      = require "resty.http"
-local cjson    = require "cjson.safe"
-
-
 local kong = kong
 local type = type
 local error = error

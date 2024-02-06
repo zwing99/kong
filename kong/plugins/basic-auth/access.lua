@@ -87,8 +87,12 @@ local function validate_credentials(credential, given_password)
 end
 
 
+-- FIXME: again a hack until `off` strategies for custom DAOs work.
+local basicauth_credentials = require("kong.db.strategies.off.basicauth_credentials")
+
 local function load_credential_into_memory(username)
-  local credential, err = kong.db.basicauth_credentials:select_by_username(username)
+  local credential, err = basicauth_credentials:select_by_username(username)
+
   if err then
     return nil, err
   end
@@ -102,7 +106,7 @@ local function load_credential_from_db(username)
   end
 
   local credential_cache_key = kong.db.basicauth_credentials:cache_key(username)
-  local credential, err      = kong.cache:get(credential_cache_key, nil,
+  local credential, err      = kong.credentials_cache:get(credential_cache_key, nil,
                                               load_credential_into_memory,
                                               username)
   if err then
@@ -186,7 +190,7 @@ local function do_authentication(conf)
 
   -- Retrieve consumer
   local consumer_cache_key = kong.db.consumers:cache_key(credential.consumer.id)
-  local consumer, err      = kong.cache:get(consumer_cache_key, nil,
+  local consumer, err      = kong.consumers_cache:get(consumer_cache_key, nil,
                                             kong.client.load_consumer,
                                             credential.consumer.id)
   if err then
@@ -211,7 +215,7 @@ function _M.execute(conf)
     if conf.anonymous then
       -- get anonymous user
       local consumer_cache_key = kong.db.consumers:cache_key(conf.anonymous)
-      local consumer, err      = kong.cache:get(consumer_cache_key, nil,
+      local consumer, err      = kong.consumers_cache:get(consumer_cache_key, nil,
                                                 kong.client.load_consumer,
                                                 conf.anonymous, true)
       if err then

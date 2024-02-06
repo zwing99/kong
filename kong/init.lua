@@ -843,6 +843,7 @@ function Kong.init_worker()
                             err)
     return
   end
+
   kong.cache = cache
 
   local core_cache, err = kong_global.init_core_cache(kong.configuration, cluster_events, worker_events)
@@ -853,6 +854,7 @@ function Kong.init_worker()
   end
   kong.core_cache = core_cache
 
+  -- TODO: only initilize this if `role == off`
   local consumers_cache, err = kong_global.init_consumers_cache(kong.configuration, cluster_events, worker_events)
   if not consumers_cache then
     stash_init_worker_error("failed to instantiate 'kong.consumers_cache' module: " ..
@@ -868,6 +870,14 @@ function Kong.init_worker()
     return
   end
   kong.credentials_cache = credentials_cache
+
+  -- FIXME:
+  -- configure kong.cache so that it picks up either credentials_cache
+  -- or kong.cache, depending on the kong.config option and depending on the
+  -- role.
+  -- __index metamethods can be used to make this transparent to the rest of
+  -- the code.
+
 
 
   kong.db:set_events_handler(worker_events)

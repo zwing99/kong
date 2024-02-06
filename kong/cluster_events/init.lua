@@ -198,10 +198,8 @@ function _M:subscribe(channel, cb, start_polling)
   else
     insert(self.callbacks[channel], cb)
   end
-  print("self.callbacks[channel] = " .. require("inspect")(self.callbacks[channel]))
 
-
-  print("self.callbacks[channel] = " .. require("inspect")(self.callbacks[channel]))
+  -- print("self.callbacks[channel] = " .. require("inspect")(self.callbacks[channel]))
   if start_polling == nil then
     start_polling = true
   end
@@ -249,14 +247,10 @@ local function process_event(self, row, local_start_time)
     return nil, "failed to mark event as ran: " .. err
   end
 
-  print("finding callbacks for `row.channel` -> " .. row.channel)
-  print("row.channel = " .. require("inspect")(row.channel))
   local cbs = self.callbacks[row.channel]
-  print("cbs = " .. require("inspect")(cbs))
   if not cbs then
     return true
   end
-  print("do we have cbs here?")
 
   for j = 1, #cbs do
     local delay
