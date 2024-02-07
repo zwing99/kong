@@ -10,7 +10,7 @@ return {
     workspaceable = true,
     admin_api_name = "key-auths",
     admin_api_nested_name = "key-auth",
-    db_export = false,
+    db_export = kong.configuration.lazy_loaded_consumers == "off", -- TODO: move this check to a helper
     fields = {
       { id = typedefs.uuid },
       { created_at = typedefs.auto_timestamp_s },

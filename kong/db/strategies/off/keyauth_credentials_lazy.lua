@@ -5,7 +5,7 @@ local cjson    = require "cjson.safe"
 
 local KeyauthCredentials = {}
 
-function KeyauthCredentials:select(key)
+function KeyauthCredentials:select_by_key(key)
 
   local c = http.new()
 

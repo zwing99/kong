@@ -35,11 +35,28 @@ local ERR_UNEXPECTED          = { status = 500, message = "An unexpected error o
 
 
 -- XXX: HACK
-local keyauth_credentials = require("kong.db.strategies.off.keyauth_credentials")
+-- local keyauth_credentials = require("kong.db.strategies.off.keyauth_credentials_lazy")
 local function load_credential(key)
   -- Something is off with overloading functions in non-core daos.
   -- Postpone this to later
-  return keyauth_credentials:select(key)
+  local keyauth_credentials = kong.db.keyauth_credentials
+  if kong.configuration.lazy_loaded_consumers == "on" and
+     kong.configuration.role == "data_plane" and
+     kong.configuration.database == "off" then
+    keyauth_credentials = require("kong.db.strategies.off.keyauth_credentials_lazy")
+  end
+  local cred, err = keyauth_credentials:select_by_key(key)
+  if not cred then
+    return nil, err
+  end
+
+  if cred.ttl == 0 then
+    kong.log.debug("key expired")
+
+    return nil
+  end
+
+  return cred, nil, cred.ttl
 end
 --- XXX: HACK END
 
