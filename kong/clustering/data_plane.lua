@@ -65,8 +65,6 @@ function _M.new(clustering)
     conf = clustering.conf,
     cert = clustering.cert,
     cert_key = clustering.cert_key,
-    events_shm = ngx.shared.kong_cluster_events,
-    connection = nil,
 
     -- in konnect_mode, reconfigure errors will be reported to the control plane
     -- via WebSocket message

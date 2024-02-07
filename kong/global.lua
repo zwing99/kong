@@ -305,8 +305,6 @@ function _GLOBAL.init_consumers_cache(kong_config, cluster_events, worker_events
     db_cache_ttl = 0
     db_cache_neg_ttl = 0
   end
-  -- TODO: Actually we don't need this on the CP.
-  -- conditionally register only on DP
   return kong_cache.new({
     shm_name        = "kong_consumers_db_cache",
     cluster_events  = cluster_events,
@@ -347,8 +345,6 @@ function _GLOBAL.init_credentials_cache(kong_config, cluster_events, worker_even
     db_cache_ttl = 0
     db_cache_neg_ttl = 0
   end
-  -- TODO: Actually we don't need this on the CP.
-  -- conditionally register only on DP
   return kong_cache.new({
     shm_name        = "kong_credentials_db_cache",
     cluster_events  = cluster_events,
