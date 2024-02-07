@@ -219,6 +219,7 @@ end
 function _GLOBAL.init_cluster_events(kong_config, db)
   return kong_cluster_events.new({
     db            = db,
+    lazy_loaded_consumers = kong_config.lazy_loaded_consumers == "on",
     poll_interval = kong_config.db_update_frequency,
     poll_offset   = kong_config.db_update_propagation,
     poll_delay    = kong_config.db_update_propagation,
@@ -289,6 +290,12 @@ function _GLOBAL.init_core_cache(kong_config, cluster_events, worker_events)
 end
 
 function _GLOBAL.init_consumers_cache(kong_config, cluster_events, worker_events)
+  if kong_config.database ~= "off" or
+     kong_config.role ~= "data_plane" or
+     kong_config.lazy_loaded_consumers ~= "on" then
+     return nil, "not qualified for this cache"
+  end
+
   local db_cache_ttl = kong_config.db_cache_ttl
   local db_cache_neg_ttl = kong_config.db_cache_neg_ttl
   local page = 1
@@ -325,6 +332,12 @@ end
 
 
 function _GLOBAL.init_credentials_cache(kong_config, cluster_events, worker_events)
+  if kong_config.database ~= "off" or
+     kong_config.role ~= "data_plane" or
+     kong_config.lazy_loaded_consumers ~= "on" then
+     return nil, "not qualified for this cache"
+  end
+
   local db_cache_ttl = kong_config.db_cache_ttl
   local db_cache_neg_ttl = kong_config.db_cache_neg_ttl
   local page = 1

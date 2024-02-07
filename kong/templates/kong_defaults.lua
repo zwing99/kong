@@ -186,6 +186,8 @@ lua_max_resp_headers = 100
 lua_max_uri_args = 100
 lua_max_post_args = 100
 
+lazy_loaded_consumers = off
+
 role = traditional
 kic = off
 pluginserver_names = NONE
