@@ -6,6 +6,7 @@ local KeyauthCredentials = {}
 function KeyauthCredentials:select_by_key(key)
   local cred, err = fetch_from_cp("/key-auths/" .. key)
 
+  print("cred = " .. require("inspect")(cred))
   if not cred then
     return nil, err
   end

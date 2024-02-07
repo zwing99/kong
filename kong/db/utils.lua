@@ -10,7 +10,7 @@ local http      = require "resty.http"
 
 local _M = {}
 
-function _M:fetch_from_cp(resource)
+function _M.fetch_from_cp(resource)
   local kong_conf = kong.configuration
   local c = http.new()
 
