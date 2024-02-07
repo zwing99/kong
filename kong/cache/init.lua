@@ -142,7 +142,6 @@ function _M.new(opts)
   }
 
   local ok, err = cluster_events:subscribe(subscription_channel, opts.cb or function(key)
-    -- TODO: I think this is useless by now.
     log(DEBUG, "received invalidate event from cluster for key: '", key, "'")
     self:invalidate_local(key)
   end)

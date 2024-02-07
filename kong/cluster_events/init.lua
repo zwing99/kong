@@ -90,10 +90,9 @@ function _M.new(opts)
     if opts.db.strategy == "postgres" then
       db_strategy = require "kong.cluster_events.strategies.postgres"
 
-    -- FIXME: the off strategy should only be enabled when lazily loading consumers
-    -- on a broader note, is the `off` directory even the right place for this?
-    -- there is a default strategy that relies on LMDB which is used for `off`
-    -- so should the directory look for stragies.lazy_loaded_consumers?
+    -- The "off" strategy is used to disable the cluster_events feature
+    -- and this should remain the default when `lazy_loaded_consumers` is
+    -- off
     elseif opts.lazy_loaded_consumers and opts.db.strategy == "off" then
       print("setting strategy to lazy loaded ")
       db_strategy = require "kong.cluster_events.strategies.from-cp"
