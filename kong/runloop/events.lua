@@ -285,6 +285,8 @@ local function crud_consumers_handler(data)
   if old_entity then
     old_username = old_entity.username
     if old_username and old_username ~= null and old_username ~= "" then
+      -- TODO: how do we handle the `consumers_cache` here?
+      -- Where is this used? In which mode?
       kong_cache:invalidate(db.consumers:cache_key(old_username))
     end
   end
@@ -293,6 +295,8 @@ local function crud_consumers_handler(data)
   if entity then
     local username = entity.username
     if username and username ~= null and username ~= "" and username ~= old_username then
+      -- TODO: how do we handle the `consumers_cache` here?
+      -- Where is this used? In which mode?
       kong_cache:invalidate(db.consumers:cache_key(username))
     end
   end
