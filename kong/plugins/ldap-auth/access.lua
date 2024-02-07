@@ -289,7 +289,7 @@ function _M.execute(conf)
     if conf.anonymous then
       -- get anonymous user
       local consumer_cache_key = kong.db.consumers:cache_key(conf.anonymous)
-      local consumer, err      = kong.cache:get(consumer_cache_key, nil,
+      local consumer, err      = kong.consumers_cache:get(consumer_cache_key, nil,
                                                 kong.client.load_consumer,
                                                 conf.anonymous, true)
       if err then

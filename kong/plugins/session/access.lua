@@ -95,7 +95,7 @@ function _M.execute(conf)
   local consumer_id, credential_id, groups = kong_session.get_session_data(session)
 
   local consumer_cache_key = kong.db.consumers:cache_key(consumer_id)
-  local consumer, err = kong.cache:get(consumer_cache_key, nil,
+  local consumer, err = kong.consumers_cache:get(consumer_cache_key, nil,
                                        kong.client.load_consumer, consumer_id)
   if err then
     kong.log.err("could not load consumer: ", err)

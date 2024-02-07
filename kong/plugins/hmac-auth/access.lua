@@ -337,7 +337,7 @@ local function do_authentication(conf)
   -- Retrieve consumer
   local consumer_cache_key, consumer
   consumer_cache_key = kong.db.consumers:cache_key(credential.consumer.id)
-  consumer, err      = kong.cache:get(consumer_cache_key, nil,
+  consumer, err      = kong.consumers_cache:get(consumer_cache_key, nil,
                                       kong_client.load_consumer,
                                       credential.consumer.id)
   if err then

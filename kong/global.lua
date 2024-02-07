@@ -356,9 +356,15 @@ function _GLOBAL.init_credentials_cache(kong_config, cluster_events, worker_even
     cache_pages     = cache_pages,
     resty_lock_opts = LOCK_OPTS,
     lru_size        = get_lru_size(kong_config),
-    subscription_channel = "clustering:keyauth_credentials",
+    subscription_channel = "clustering:credentials",
     cb = function(data)
-      local cache_key = kong.db.keyauth_credentials:cache_key(data.key, nil, nil, nil, nil, data.ws_id)
+      local cache_key
+      if data.entity_name == "keyauth_credentials" then
+        cache_key = kong.db.keyauth_credentials:cache_key(data.key, nil, nil, nil, nil, data.ws_id)
+      end
+      if data.entity_name == "basicauth_credentials" then
+        cache_key = kong.db.basicauth_credentials:cache_key(data.username, nil, nil, nil, nil, data.ws_id)
+      end
       kong.credentials_cache:invalidate(cache_key)
     end,
   })
