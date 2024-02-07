@@ -466,11 +466,10 @@ end
 
 local function register_for_dbless(reconfigure_handler)
   -- initialize local local_events hooks
-
-  kong_cache     = kong.cache
-  core_cache     = kong.core_cache
   worker_events = assert(kong.worker_events)
-  cluster_events = assert(kong.cluster_events)
+  -- kong_cache     = kong.cache
+  -- core_cache     = kong.core_cache
+  -- cluster_events = assert(kong.cluster_events)
 
   subscribe_worker_events("declarative", "reconfigure", reconfigure_handler)
 end

@@ -556,22 +556,6 @@ local function push_config_loop(premature, self, push_config_semaphore, delay)
 end
 
 
-local function push_consumers_loop(premature, self)
-  if premature then
-    return
-  end
-
-  while not exiting() do
-    local ok, err = self:push_consumers()
-    if not ok then
-      ngx_log(ngx_ERR, _log_prefix, "failed to push consumers to data planes: ", err)
-    end
-    sleep(self.conf.db_update_frequency)
-  end
-
-
-end
-
 function _M:init_worker(basic_info)
   -- ROLE = "control_plane"
   local plugins_list = basic_info.plugins
@@ -605,8 +589,6 @@ function _M:init_worker(basic_info)
 
   timer_at(0, push_config_loop, self, push_config_semaphore,
                self.conf.db_update_frequency)
-
-  timer_at(0, push_consumers_loop, self)
 end
 
 

@@ -856,6 +856,7 @@ function Kong.init_worker()
 
   local consumers_cache, err = kong_global.init_consumers_cache(kong.configuration, cluster_events, worker_events)
   if not consumers_cache then
+    -- TODO: this leaves an error message in the logs that tells the user to restart the node
     -- stash_init_worker_error("failed to instantiate 'kong.consumers_cache' module: " ..
     --                         err)
     -- return
