@@ -356,10 +356,6 @@ function _M:handle_cp_websocket(cert)
                  .. " hash: '" .. tostring(data) .. "'"
       end
 
-      if type == "requesting-consumers" then
-        print("data = " .. require("inspect")(data))
-      end
-
       -- dps only send pings
       if typ ~= "ping" then
         return nil, "invalid websocket frame received from data plane: " .. typ
