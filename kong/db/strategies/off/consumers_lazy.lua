@@ -10,11 +10,13 @@ function Consumers:select(id)
   if not id then
     return nil, "id is required"
   end
+  print("FETCHING CONSUMER FROM CP ")
   return fetch_from_cp("/consumers/" .. id)
 end
 
 function Consumers:select_by_username(username)
   -- Retrieve a consumer by username from the admin api :8001/consumers/:username
+  print("FETCHING CONSUMER FROM CP ")
   return fetch_from_cp("/consumers/" .. username)
 end
 
