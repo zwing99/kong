@@ -16,7 +16,7 @@ function KeyauthCredentials:select_by_key(key)
 
     return nil
   end
-  return cred, nil, cred.ttl
+  return cred, nil, cred.ttl or -1
 end
 
 return KeyauthCredentials

@@ -72,6 +72,8 @@ local DB = require "kong.db"
 local dns = require "kong.tools.dns"
 local meta = require "kong.meta"
 local lapis = require "lapis"
+local hooks       = require "kong.hooks"
+local respond_to = require("lapis.application").respond_to
 local runloop = require "kong.runloop.handler"
 local stream_api = require "kong.tools.stream_api"
 local declarative = require "kong.db.declarative"
@@ -1948,6 +1950,14 @@ function Kong.serve_cluster_listener(options)
   ngx.ctx.KONG_PHASE = PHASES.cluster_listener
 
   return kong.clustering:handle_cp_websocket()
+end
+
+function Kong.serve_lazy_api(options)
+  log_init_worker_errors()
+
+  -- ngx.ctx.KONG_PHASE = PHASES.cluster_listener
+
+  return lapis.serve("kong.api.lazy")
 end
 
 

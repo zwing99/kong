@@ -417,7 +417,7 @@ local handler_helpers = {
 }
 
 
-function _M.attach_routes(app, routes)
+function _M.attach_routes(app, routes, prefix)
   for route_path, methods in pairs(routes) do
     methods.on_error = methods.on_error or on_error
 
@@ -450,6 +450,11 @@ function _M.attach_routes(app, routes)
       methods["OPTIONS"] = options_method(concat(http_methods_array, ", ", 1, http_methods_count))
     end
 
+    print("prefix = " .. require("inspect")(prefix))
+    if prefix then
+      route_path = prefix .. route_path
+    end
+    print("route_path = " .. require("inspect")(route_path))
     app:match(route_path, route_path, app_helpers.respond_to(methods))
 
     assert(hooks.run_hook("api:helpers:attach_routes",
@@ -458,7 +463,7 @@ function _M.attach_routes(app, routes)
 end
 
 
-function _M.attach_new_db_routes(app, routes)
+function _M.attach_new_db_routes(app, routes, prefix)
   for route_path, definition in pairs(routes) do
     local schema  = definition.schema
     local methods = definition.methods
@@ -499,6 +504,10 @@ function _M.attach_new_db_routes(app, routes)
       methods["OPTIONS"] = options_method(concat(http_methods_array, ", ", 1, http_methods_count))
     end
 
+    print("prefix = " .. require("inspect")(prefix))
+    if prefix then
+      route_path = prefix .. route_path
+    end
     app:match(route_path, route_path, app_helpers.respond_to(methods))
 
     assert(hooks.run_hook("api:helpers:attach_new_db_routes",
@@ -523,6 +532,7 @@ end
 
 
 function _M.handle_404(self)
+  print("self.req.parsed_url.path = " .. require("inspect")(self.req.parsed_url.path))
   return kong.response.exit(404, { message = "Not found" })
 end
 

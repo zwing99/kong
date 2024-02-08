@@ -7,6 +7,7 @@ local clustering_utils = require("kong.clustering.utils")
 local events = require("kong.clustering.events")
 local clustering_tls = require("kong.clustering.tls")
 local wasm = require("kong.runloop.wasm")
+local lapis = require "lapis"
 
 
 local assert = assert
@@ -71,7 +72,6 @@ function _M:handle_cp_websocket()
 
   return self.instance:handle_cp_websocket(cert)
 end
-
 
 function _M:init_cp_worker(basic_info)
 

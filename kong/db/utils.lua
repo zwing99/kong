@@ -14,7 +14,8 @@ function _M.fetch_from_cp(resource)
   local kong_conf = kong.configuration
   local c = http.new()
 
-  local api_ssl_listen = select_listener(kong_conf.admin_listeners, {ssl = true})
+  local control_plane_adr = kong_conf.cluster_control_plane
+  local host, port = control_plane_adr:match("([^:]+):([^:]+)")
   local cert = assert(get_cluster_cert(kong_conf))
   local cert_key = assert(get_cluster_cert_key(kong_conf))
 
@@ -22,8 +23,8 @@ function _M.fetch_from_cp(resource)
   c:set_timeout(5000) -- 2 sec
   local ok, err = c:connect({
     scheme = "https",
-    host = api_ssl_listen.ip,
-    port = api_ssl_listen.port,
+    host = host,
+    port = port,
     -- FIXME: verify cert when shipping
     ssl_verify = false,
     ssl_client_cert = cert.cdata,
@@ -31,34 +32,44 @@ function _M.fetch_from_cp(resource)
   })
 
   if not ok then
-    return nil, "ssl handshake failed: " .. err
+    return nil, "ssl handshake failed: " .. err, -1
   end
 
   print(fmt("XXX: FETCHING %s FROM CP", resource))
   local response, err = c:request({
-    path = resource,
+    path = "/v1/api" .. resource,
     method = "GET",
     headers = {
       ["Content-Type"] = "application/json",
     },
   })
+  print("err = " .. require("inspect")(err))
   if err then
-    return nil, err
+    -- FIXME: return a proper TTL after development is done
+    return nil, err, -1
   end
-
+  print("response = " .. require("inspect")(response))
 
   local res, err = response:read_body()
   if not res then
-    return nil, err
+    -- FIXME: return a proper TTL after development is done
+    return nil, err, -1
   end
+  print("res = " .. require("inspect")(res))
 
   local cred = cjson.decode(res)
 
-  if cred.message == "Not found" then
-    return nil, nil -- -1
+  if not cred then
+    return nil, "could not decode", -1
   end
 
-  return cred, nil
+  if cred.message == "Not found" then
+    -- FIXME: return a proper TTL after development is done
+    return nil, nil, -1
+  end
+
+  -- FIXME: return a proper TTL after development is done
+  return cred, nil, -1
 end
 
 local function visit(current, neighbors_map, visited, marked, sorted)
