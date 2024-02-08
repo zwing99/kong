@@ -236,7 +236,6 @@ local function process_event(self, row, local_start_time)
   end
 
   if ran then
-    -- print("not repeating event for row.channel -> " .. row.channel)
     return true
   end
 
@@ -246,9 +245,6 @@ local function process_event(self, row, local_start_time)
 
   -- mark as ran before running in case of long-running callbacks
   local ok, err = self.events_shm:set(row.id, true, self.event_ttl_shm)
-  if not row.channel == "clustering:clustering_data_planes" then
-    print("XXX: successfully set event as ran = " .. tostring(ok) .. " err = " .. tostring(err) .. "id -> " .. row.id)
-  end
   if not ok then
     return nil, "failed to mark event as ran: " .. err
   end
@@ -271,7 +267,6 @@ local function process_event(self, row, local_start_time)
       log(DEBUG, "delaying nbf event by ", delay, "s")
 
       print("executing callback")
-      print("XXX: data = " .. require("inspect")(row.data))
       local ok, err = timer_at(delay, nbf_cb_handler, cbs[j], row.data)
       print("callback ok = " .. tostring(ok) .. " err = " .. tostring(err))
       if not ok then
@@ -280,8 +275,6 @@ local function process_event(self, row, local_start_time)
 
     else
       print("executing callback")
-      print("XXX: data = " .. require("inspect")(row.data))
-      print("row = " .. require("inspect")(row))
       local ok, err = pcall(cbs[j], row.data)
       print("callback ok = " .. tostring(ok) .. " err = " .. tostring(err))
       if not ok and not ngx_debug then
