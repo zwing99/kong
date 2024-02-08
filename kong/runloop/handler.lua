@@ -912,11 +912,14 @@ return {
 
       update_lua_mem(true)
 
+      -- Also register events on control_plane
+      if kong.configuration.lazy_loaded_consumers then
+        events.register_events(reconfigure_handler)
+      end
+
       if kong.configuration.role == "control_plane" then
         return
       end
-
-      events.register_events(reconfigure_handler)
 
       -- initialize balancers for active healthchecks
       timer_at(0, function()

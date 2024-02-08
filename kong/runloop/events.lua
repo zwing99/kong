@@ -171,6 +171,7 @@ end
 
 
 local function dao_crud_handler(data)
+  print(debug.traceback())
   local schema = data.schema
   if not schema then
     log(ERR, "[events] missing schema in crud subscriber")
@@ -484,11 +485,13 @@ local function register_events(reconfigure_handler)
   db = kong.db
 
   if db.strategy == "off" then
+    print("REGISTERING OFF EVENTS")
     -- declarative config updates
     register_for_dbless(reconfigure_handler)
     return
   end
 
+  print("REGISTERING DB EVENTS")
   register_for_db()
 end
 

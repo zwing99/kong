@@ -271,6 +271,7 @@ local function process_event(self, row, local_start_time)
       log(DEBUG, "delaying nbf event by ", delay, "s")
 
       print("executing callback")
+      print("XXX: data = " .. require("inspect")(row.data))
       local ok, err = timer_at(delay, nbf_cb_handler, cbs[j], row.data)
       print("callback ok = " .. tostring(ok) .. " err = " .. tostring(err))
       if not ok then
@@ -279,6 +280,8 @@ local function process_event(self, row, local_start_time)
 
     else
       print("executing callback")
+      print("XXX: data = " .. require("inspect")(row.data))
+      print("row = " .. require("inspect")(row))
       local ok, err = pcall(cbs[j], row.data)
       print("callback ok = " .. tostring(ok) .. " err = " .. tostring(err))
       if not ok and not ngx_debug then

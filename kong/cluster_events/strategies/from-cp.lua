@@ -26,7 +26,7 @@ function OffStrategy:select_interval(channels, min_at, max_at)
   -- If we support `indexing|filtering` in the future, we can use that to filter the events.
   local c = http.new()
 
-  -- TODO: properly implement pageing
+  -- TODO: properly implement pageing and TLS
   local url = "http://localhost:8001/clustering/events"
 
   print("pinging events endpoint")
@@ -57,13 +57,9 @@ function OffStrategy:select_interval(channels, min_at, max_at)
     for i, event in ipairs(res.data) do
       -- print("fetching server_time")
       event.now = self:server_time()
-      -- print("decoding")
-      event.data = cjson.decode(event.data)
-      -- print("decoding done")
     end
 
     local len = #res.data
-    print("XXX: len = " .. require("inspect")(len))
     if len == 0 then
       return nil
     end

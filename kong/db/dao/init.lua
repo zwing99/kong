@@ -1489,8 +1489,8 @@ function DAO:post_crud_event(operation, entity, old_entity, options)
 
     -- on any event, we broadcast the event to the cluster
     -- so that the DPs can consume it
-    local broadcast_data = entity_without_nulls
-    broadcast_data["operation"] = operation
+    -- local broadcast_data = entity_without_nulls
+    -- broadcast_data["operation"] = operation
     --[[
       -[ RECORD 1 ]-----------------------------------
       id        | f9562282-f55c-4e65-a624-d765846ea477
@@ -1501,14 +1501,14 @@ function DAO:post_crud_event(operation, entity, old_entity, options)
       channel   | clustering:consumers
       data      | '{"operation": "delete", "id": "f9562282-f55c-4e65-a624-d765846ea477"}'
     --]]
-    local channel = self.schema.name
-    if self.schema.name == "keyauth_credentials" or
-       self.schema.name == "basicauth_credentials" then
-        -- combining credentials to a common channel
-        channel = "credentials"
-        broadcast_data.entity_name = self.schema.name
-    end
-    kong.cluster_events:broadcast(fmt("clustering:%s", channel), cjson.encode(broadcast_data))
+    -- local channel = self.schema.name
+    -- if self.schema.name == "keyauth_credentials" or
+    --    self.schema.name == "basicauth_credentials" then
+    --     -- combining credentials to a common channel
+    --     channel = "credentials"
+    --     broadcast_data.entity_name = self.schema.name
+    -- end
+    -- kong.cluster_events:broadcast(fmt("clustering:%s", channel), cjson.encode(broadcast_data))
     local ok, err = self.events.post_local("dao:crud", operation, {
       operation  = operation,
       schema     = self.schema,

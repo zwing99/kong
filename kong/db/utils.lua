@@ -48,6 +48,10 @@ function _M.fetch_from_cp(resource)
 
 
   local res, err = response:read_body()
+  if not res then
+    return nil, err
+  end
+
   local cred = cjson.decode(res)
 
   if cred.message == "Not found" then
