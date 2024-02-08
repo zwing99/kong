@@ -206,6 +206,8 @@ local function do_authentication(conf)
   -- Success, this request is authenticated
   -----------------------------------------
 
+  -- local credentials, err, hit_level = kong.client.get_consumers({identifier = credential.consumer.id})
+
   -- retrieve the consumer linked to this API key, to set appropriate headers
   local consumer_cache_key, consumer
   consumer_cache_key = kong.db.consumers:cache_key(credential.consumer.id)

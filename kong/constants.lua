@@ -153,11 +153,7 @@ local constants = {
     "filter_chains",
   },
   ENTITY_CACHE_STORE = setmetatable({
-    -- take consumers out of core-cache/cache
-    -- TODO: find out what this actually does
-
-    -- UPDATE: these are used in events.dao_event_handler to determine cache invaldation targets
-    -- where key is schema name and value is cache store name
+    -- FIXME: fall back to `cache` when the `lazy_loaded_consumers` is not enabled
     consumers = "consumers_cache",
     keyauth_credentials = "credentials_cache",
     basicauth_credentials = "credentials_cache",

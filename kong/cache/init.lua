@@ -141,8 +141,8 @@ function _M.new(opts)
     neg_ttl        = neg_ttl,
   }
 
-  local ok, err = cluster_events:subscribe(subscription_channel, opts.cb or function(key)
-    log(DEBUG, "received invalidate event from cluster for key: '", key, "'")
+  local ok, err = cluster_events:subscribe(subscription_channel, function(key)
+    log(DEBUG, "XXX: received invalidate event from cluster for key: '", key, "'")
     self:invalidate_local(key)
   end)
   if not ok then
@@ -241,6 +241,7 @@ end
 
 
 function _M:invalidate(key)
+  print("INVALIDATE IS CALLED key = " .. require("inspect")(key))
   if type(key) ~= "string" then
     error("key must be a string", 2)
   end
