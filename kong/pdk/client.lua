@@ -164,6 +164,20 @@ local function new(self)
 
     return ngx.ctx.authenticated_credential
   end
+  function _CLIENT.fetch_consumer(opts)
+    local identifier = opts.identifier
+    local consumer_cache_key = kong.db.consumers:cache_key(identifier)
+    return kong.consumers_cache:get(consumer_cache_key,
+      nil, _CLIENT.load_consumer, identifier, opts.search_by_username)
+  end
+
+  function _CLIENT.fetch_keyauth_credential(opts)
+    local identifier = opts.identifier
+    local cb = opts.callback
+    local credential_cache_key = kong.db.keyauth_credentials:cache_key(identifier)
+    -- hit_level be 1 if stale value is propelled into L1 cache; so set a minimal `resurrect_ttl`
+    return kong.credentials_cache:get(credential_cache_key, { resurrect_ttl = 0.001 }, cb, identifier)
+  end
 
 
   ---
