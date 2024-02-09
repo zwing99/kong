@@ -1,27 +1,26 @@
-local cjson = require("cjson.safe")
 local fetch_from_cp = require "kong.db.utils".fetch_from_cp
 local fmt = string.format
 
-local off = {}
+local lazy_loader = {}
 
 
-local OffStrategy = {}
-OffStrategy.__index = OffStrategy
+local LazyLoader = {}
+LazyLoader.__index = LazyLoader
 
 
-function OffStrategy.should_use_polling()
+function LazyLoader.should_use_polling()
   -- TODO: this polls now.
   return true
 end
 
 
-function OffStrategy:insert(node_id, channel, at, data, delay)
+function LazyLoader:insert(node_id, channel, at, data, delay)
   -- We don't insert on the DP
   return true
 end
 
 
-function OffStrategy:select_interval(channels, min_at, max_at)
+function LazyLoader:select_interval(channels, min_at, max_at)
   -- FIXME: have this support min_at and max_at and specific channel query.
   -- For now, just return all events and filter them here. It's inefficient but okay with the POC
   -- If we support `indexing|filtering` in the future, we can use that to filter the events.
@@ -57,24 +56,25 @@ function OffStrategy:select_interval(channels, min_at, max_at)
 end
 
 
-function OffStrategy:truncate_events()
+function LazyLoader:truncate_events()
   return true
 end
 
 
-function OffStrategy:server_time()
+function LazyLoader:server_time()
   return ngx.now()
 end
 
 
-function off.new(db, page_size, event_ttl)
+function lazy_loader.new(db, page_size, event_ttl)
   print("XXX: creating a new OFF strategy")
   return setmetatable({
     db = db,
+    connector = db.connector,
     page_size = page_size,
     event_ttl = event_ttl,
-  }, OffStrategy)
+  }, LazyLoader)
 end
 
 
-return off
+return lazy_loader

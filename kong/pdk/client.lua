@@ -175,6 +175,11 @@ local function new(self)
 
 
   function _CLIENT.fetch_keyauth_credential(opts)
+    -- TODO: Moving this part out to the PDK is an experiement
+    -- to hide away the cache key generation and cache access from the plugin
+    -- There is a possibility that this part will be moved back to the plugin
+    -- as the dao isn't necessarily loaded but can be used from whereever else
+    -- On the other hand, you can use the DAO in other plugins _directly_ as well
     local identifier = opts.identifier
     local cb = opts.callback
     local credential_cache_key = kong.db.keyauth_credentials:cache_key(identifier)
