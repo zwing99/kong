@@ -174,10 +174,19 @@ local function new(self)
   end
 
 
-  function _CLIENT.fetch_keyauth_credential(opts)
+  function _CLIENT.fetch_credential(opts)
+    -- TODO: Moving this part out to the PDK is an experiement
+    -- to hide away the cache key generation and cache access from the plugin
+    -- There is a possibility that this part will be moved back to the plugin
+    -- as the dao isn't necessarily loaded but can be used from whereever else
+    -- On the other hand, you can use the DAO in other plugins _directly_ as well
     local identifier = opts.identifier
     local cb = opts.callback
-    local credential_cache_key = kong.db.keyauth_credentials:cache_key(identifier)
+    local entity = opts.entity
+    if not entity then
+      error("entity must be provided", 2)
+    end
+    local credential_cache_key = entity:cache_key(identifier)
     -- hit_level be 1 if stale value is propelled into L1 cache; so set a minimal `resurrect_ttl`
     return kong.credentials_cache:get(credential_cache_key, { resurrect_ttl = 0.001 }, cb, identifier)
   end

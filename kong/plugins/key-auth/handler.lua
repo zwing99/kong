@@ -173,7 +173,7 @@ local function do_authentication(conf)
 
   -- local cache = kong.cache
 
-  local credential, err, hit_level = kong.client.fetch_keyauth_credential({identifier = key, callback = load_credential})
+  local credential, err, hit_level = kong.client.fetch_credential({identifier = key, callback = load_credential, entity = kong.db.keyauth_credentials})
 
   if err then
     return error(err)
