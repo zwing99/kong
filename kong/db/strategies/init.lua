@@ -50,11 +50,14 @@ function _M.new(kong_config, database, schemas, errors)
 
   for _, schema in pairs(schemas) do
     local strategy, err = Strategy.new(connector, schema, errors)
+    -- TODO: also load keyauth and basic auth credentials
     if schema.name == "consumers" and
        kong_config.lazy_loaded_consumers == "on" and
        kong_config.role == "data_plane" and
        kong_config.database == "off" then
 
+      -- Also implement a simple connector for the lazy strategy
+      -- that only implemenets query.
       local lazy_Strategy = require(fmt("kong.db.strategies.lazy"))
       strategy, err = lazy_Strategy.new(connector, schema, errors)
     end
@@ -65,19 +68,6 @@ function _M.new(kong_config, database, schemas, errors)
 
     local custom_strat = fmt("kong.db.strategies.%s.%s", database, schema.name)
     local exists, mod = load_module_if_exists(custom_strat)
-    -- if kong.configuration["lazy_loaded_consumers"] == "on" and
-    --    kong.configuration["role"] == "data_plane" and
-    --    kong.configuration["database"] == "off" then
-    --   if schema.name == "keyauth_credentials" or
-    --      schema.name == "consumers" or
-    --      schema.name == "basicauth_credentials" then
-    --     print("schema.name = " .. require("inspect")(schema.name))
-    --     print("lazy_loaded_consumers -> on")
-    --     -- TODO: maybe introduce a new directory instead of suffixing the schema names
-    --     custom_strat = fmt("kong.db.strategies.%s.%s", database, schema.name .. "_lazy")
-    --     exists, mod = load_module_if_exists(custom_strat)
-    --   end
-    -- end
     if exists and mod then
       local parent_mt = getmetatable(strategy)
       local mt = {

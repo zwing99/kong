@@ -15,11 +15,11 @@ local kong = kong
 
 local app = lapis.Application()
 
--- app.default_route = api_helpers.default_route
+app.default_route = api_helpers.default_route
 app.handle_404 = api_helpers.handle_404
--- app.handle_error = api_helpers.handle_error
--- app:before_filter(api_helpers.cors_filter)
--- app:before_filter(api_helpers.before_filter)
+app.handle_error = api_helpers.handle_error
+app:before_filter(api_helpers.cors_filter)
+app:before_filter(api_helpers.before_filter)
 
 
 assert(hooks.run_hook("api:init:pre", app))
@@ -122,6 +122,28 @@ do
   assert(hooks.run_hook("api:init:post", app, routes))
 
   api_helpers.attach_new_db_routes(app, routes, "/v1/api")
+
+  app:match("cluster_events", "/v1/api/events", function(self)
+    local events = {}
+    local pg = self.req.params_get
+    local min_at, max_at
+    if pg then
+      min_at = tonumber(pg.min_at)
+      max_at = tonumber(pg.max_at)
+    end
+    print("min_at = " .. require("inspect")(min_at))
+    print("max_at = " .. require("inspect")(max_at))
+    for rows, err, page in kong.cluster_events.strategy:select_interval({"invalidations"}, min_at, max_at) do
+      if err then
+        return { status = 500, json = { message = "An unexpected error occurred" }}
+      end
+      for _, row in ipairs(rows) do
+        table.insert(events, row)
+      end
+    end
+    return { status = 200, json = { data = events } }
+  end)
+
 end
 
 return app
