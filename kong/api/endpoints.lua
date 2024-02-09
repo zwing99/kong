@@ -140,8 +140,7 @@ local function extract_options(args, schema, context)
   local options = {
     nulls = true,
     pagination = {
-      -- FIXME: temporarily increase page size, to avoid paging in the adminapi
-      page_size     = 1000,
+      page_size     = 100,
       max_page_size = 1000,
     },
     workspace = workspaces.get_workspace_id(),

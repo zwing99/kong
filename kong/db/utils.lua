@@ -19,7 +19,7 @@ function _M.fetch_from_cp(resource)
   local cert = assert(get_cluster_cert(kong_conf))
   local cert_key = assert(get_cluster_cert_key(kong_conf))
 
-  -- Enable mutual TLS
+  -- Enable TLS
   c:set_timeout(5000) -- 2 sec
   local ok, err = c:connect({
     scheme = "https",

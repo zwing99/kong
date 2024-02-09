@@ -87,7 +87,7 @@ local function validate_credentials(credential, given_password)
 end
 
 local function load_credential_into_memory(username)
-  local credential, err = kong.db.strategies.basicauth_credentials:select_by_username(username)
+  local credential, err = kong.db.basicauth_credentials:select_by_username(username)
 
   if err then
     return nil, err

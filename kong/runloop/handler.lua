@@ -913,6 +913,9 @@ return {
       update_lua_mem(true)
 
       -- Also register events on control_plane
+      -- TODO: revisit this to check which events
+      -- are registered here. I'm only interested in
+      -- the dao invalidation cluster events.
       if kong.configuration.lazy_loaded_consumers then
         events.register_events(reconfigure_handler)
       end
