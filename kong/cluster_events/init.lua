@@ -118,11 +118,7 @@ function _M.new(opts)
     poll_interval = poll_interval,
     poll_offset   = poll_offset,
     poll_delay    = poll_delay,
-    -- FIXME: increase the TTL to 5*100 until there is proper support
-    -- for pulling only events from a certain point in time
-    -- right now we pull _all_ events. all the time
-    -- which means that invalidations happen multiple times.
-    event_ttl_shm = poll_interval * 100 + poll_offset,
+    event_ttl_shm = poll_interval * 2 + poll_offset,
     node_id       = nil,
     polling       = false,
     channels      = {},

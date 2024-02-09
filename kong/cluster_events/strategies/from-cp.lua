@@ -1,5 +1,6 @@
-local http      = require "resty.http"
 local cjson = require("cjson.safe")
+local fetch_from_cp = require "kong.db.utils".fetch_from_cp
+local fmt = string.format
 
 local off = {}
 
@@ -24,42 +25,23 @@ function OffStrategy:select_interval(channels, min_at, max_at)
   -- FIXME: have this support min_at and max_at and specific channel query.
   -- For now, just return all events and filter them here. It's inefficient but okay with the POC
   -- If we support `indexing|filtering` in the future, we can use that to filter the events.
-  local c = http.new()
-
-  -- TODO: properly implement pageing and TLS
-  local url = "http://localhost:8001/clustering/events"
-
-  print("pinging events endpoint")
 
   local page = 0
   local last_page
 
-  -- TODO: this will be replaced by a a proper long-living connection
   return function()
 
     if last_page then
       return nil
     end
 
-    local response, err = c:request_uri(url, {
-      method = "GET",
-      headers = {
-        ["Content-Type"] = "application/json",
-      },
-      keepalive = true,
-      keepalive_timeout = 10,
-      keepalive_pool = 10
-    })
+
+    local response, err, _ = fetch_from_cp(fmt("/events?min_at=%s&max_at=", min_at, max_at))
     if err then
       return nil, err
     end
-    local res = cjson.decode(response.body)
-    for i, event in ipairs(res.data) do
-      -- print("fetching server_time")
-      event.now = self:server_time()
-    end
 
-    local len = #res.data
+    local len = #response.data
     if len == 0 then
       return nil
     end
@@ -70,7 +52,7 @@ function OffStrategy:select_interval(channels, min_at, max_at)
     -- this is the only and last page
     last_page = true
 
-    return res.data, nil, page
+    return response.data, nil, page
   end
 end
 
