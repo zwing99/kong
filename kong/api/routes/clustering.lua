@@ -24,7 +24,6 @@ return {
     },
   },
 
-
   ["/clustering/status"] = {
     schema = kong.db.clustering_data_planes.schema,
     methods = {

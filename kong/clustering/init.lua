@@ -7,7 +7,6 @@ local clustering_utils = require("kong.clustering.utils")
 local events = require("kong.clustering.events")
 local clustering_tls = require("kong.clustering.tls")
 local wasm = require("kong.runloop.wasm")
-local lapis = require "lapis"
 
 
 local assert = assert

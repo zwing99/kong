@@ -1157,11 +1157,6 @@ function DAO:insert(entity, options)
   end
 
   row, err_t = run_hook("dao:insert:post", row, self.schema.name, options, ws_id)
-  -- FIXME: currently the `row` doesn't contain the `ws_id` field, but we need this
-  -- in the crud event handler.
-  -- UPDATE: there is `show_ws_id` option, but it's not used here, maybe it this is the way
-  -- forward to fix this hack
-  row["ws_id"] = ws_id or nil
   if not row then
     return nil, tostring(err_t), err_t
   end
@@ -1273,8 +1268,6 @@ function DAO:upsert(pk_or_entity, entity, options)
     return nil, tostring(err_t), err_t
   end
 
-  -- TODO: figure out why `ws_id` is omitted
-  row["ws_id"] = ws_id or nil
   if rbw_entity then
     self:post_crud_event("update", row, rbw_entity, options)
   else
@@ -1487,28 +1480,6 @@ function DAO:post_crud_event(operation, entity, old_entity, options)
       old_entity_without_nulls = remove_nulls(utils.cycle_aware_deep_copy(old_entity, true))
     end
 
-    -- on any event, we broadcast the event to the cluster
-    -- so that the DPs can consume it
-    -- local broadcast_data = entity_without_nulls
-    -- broadcast_data["operation"] = operation
-    --[[
-      -[ RECORD 1 ]-----------------------------------
-      id        | f9562282-f55c-4e65-a624-d765846ea477
-      node_id   | fd6448bc-3224-4a64-9e0f-9aa72eecd3ba
-      at        | 2024-01-25 16:56:23.99+00
-      nbf       |
-      expire_at | 2024-01-25 17:56:23.99+00
-      channel   | clustering:consumers
-      data      | '{"operation": "delete", "id": "f9562282-f55c-4e65-a624-d765846ea477"}'
-    --]]
-    -- local channel = self.schema.name
-    -- if self.schema.name == "keyauth_credentials" or
-    --    self.schema.name == "basicauth_credentials" then
-    --     -- combining credentials to a common channel
-    --     channel = "credentials"
-    --     broadcast_data.entity_name = self.schema.name
-    -- end
-    -- kong.cluster_events:broadcast(fmt("clustering:%s", channel), cjson.encode(broadcast_data))
     local ok, err = self.events.post_local("dao:crud", operation, {
       operation  = operation,
       schema     = self.schema,

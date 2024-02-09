@@ -532,7 +532,6 @@ end
 
 
 function _M.handle_404(self)
-  print("self.req.parsed_url.path = " .. require("inspect")(self.req.parsed_url.path))
   return kong.response.exit(404, { message = "Not found" })
 end
 
