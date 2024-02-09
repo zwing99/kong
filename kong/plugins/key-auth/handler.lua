@@ -184,11 +184,7 @@ local function do_authentication(conf)
 
   -- local cache = kong.cache
 
-  local credential_cache_key = kong.db.keyauth_credentials:cache_key(key)
-  -- hit_level be 1 if stale value is propelled into L1 cache; so set a minimal `resurrect_ttl`
-  print("XXX: credential_cache_key = " .. require("inspect")(credential_cache_key))
-  local credential, err, hit_level = kong.credentials_cache:get(credential_cache_key, { resurrect_ttl = 0.001 }, load_credential,
-                                    key)
+  local credential, err, hit_level = kong.client.fetch_keyauth_credential({identifier = key, callback = load_credential})
 
   if err then
     return error(err)
@@ -206,14 +202,9 @@ local function do_authentication(conf)
   -- Success, this request is authenticated
   -----------------------------------------
 
-  -- local credentials, err, hit_level = kong.client.get_consumers({identifier = credential.consumer.id})
-
   -- retrieve the consumer linked to this API key, to set appropriate headers
-  local consumer_cache_key, consumer
-  consumer_cache_key = kong.db.consumers:cache_key(credential.consumer.id)
-  consumer, err      = kong.consumers_cache:get(consumer_cache_key, nil,
-                                 kong.client.load_consumer,
-                                 credential.consumer.id)
+  local consumer, err, _ = kong.client.fetch_consumer({identifier = credential.consumer.id})
+
   if err then
     kong.log.err(err)
     return nil, ERR_UNEXPECTED
@@ -240,12 +231,8 @@ function KeyAuthHandler:access(conf)
   local ok, err = do_authentication(conf)
   if not ok then
     if conf.anonymous then
-      -- get anonymous user
-      local consumer_cache_key = kong.db.consumers:cache_key(conf.anonymous)
-      print("XXXX: consumer_cache_key = " .. require("inspect")(consumer_cache_key))
-      local consumer, err = kong.consumer_cache:get(consumer_cache_key, nil,
-                                           kong.client.load_consumer,
-                                           conf.anonymous, true)
+
+      local consumer, err, _ = kong.client.fetch_consumer({identifier = conf.anonymous, search_by_username = true})
       if err then
         return error(err)
       end
