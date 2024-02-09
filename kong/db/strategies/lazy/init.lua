@@ -104,7 +104,19 @@ local function select_by_field(self, field, value, options)
     -- only accept global query by field if field is unique across workspaces
     assert(not options or options.workspace ~= null or unique_across_ws)
 
-    key = unique_field_key(schema.name, ws_id, field, value, unique_across_ws)
+    -- key = unique_field_key(schema.name, ws_id, field, value, unique_across_ws)
+    print("schema.name = " .. require("inspect")(schema.name))
+    print("ws_id = " .. require("inspect")(ws_id))
+    print("field = " .. require("inspect")(field))
+    print("value = " .. require("inspect")(value))
+    local endpoint_name = schema.name
+    if schema.name == "keyauth_credentials" then
+      endpoint_name = "key-auths"
+    end
+    if schema.name == "basicauth_credentials" then
+      endpoint_name = "basic-auths"
+    end
+    key = fmt("/%s/%s", endpoint_name, value)
   else
     -- if select_by_cache_key, use the provided cache_key as key directly
     key = value

@@ -86,12 +86,8 @@ local function validate_credentials(credential, given_password)
   return credential.password == digest
 end
 
-
--- FIXME: again a hack until `off` strategies for custom DAOs work.
-local basicauth_credentials = require("kong.db.strategies.off.basicauth_credentials_lazy")
-
 local function load_credential_into_memory(username)
-  local credential, err = basicauth_credentials:select_by_username(username)
+  local credential, err = kong.db.strategies.basicauth_credentials:select_by_username(username)
 
   if err then
     return nil, err
