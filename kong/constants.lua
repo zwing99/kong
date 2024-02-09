@@ -145,7 +145,6 @@ local constants = {
     "tags",
     "ca_certificates",
     "clustering_data_planes",
-    "cluster_events",
     "parameters",
     "vaults",
     "key_sets",

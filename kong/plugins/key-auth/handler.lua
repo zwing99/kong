@@ -39,13 +39,13 @@ local ERR_UNEXPECTED          = { status = 500, message = "An unexpected error o
 local function load_credential(key)
   -- Something is off with overloading functions in non-core daos.
   -- Postpone this to later
-  local keyauth_credentials = kong.db.keyauth_credentials
-  if kong.configuration.lazy_loaded_consumers == "on" and
-     kong.configuration.role == "data_plane" and
-     kong.configuration.database == "off" then
-    keyauth_credentials = require("kong.db.strategies.off.keyauth_credentials_lazy")
-  end
-  local cred, err = keyauth_credentials:select_by_key(key)
+  -- local keyauth_credentials = kong.db.keyauth_credentials
+  -- if kong.configuration.lazy_loaded_consumers == "on" and
+  --    kong.configuration.role == "data_plane" and
+  --    kong.configuration.database == "off" then
+  --   keyauth_credentials = require("kong.db.strategies.off.keyauth_credentials_lazy")
+  -- end
+  local cred, err = kong.db.keyauth_credentials:select_by_key(key)
   if not cred then
     return nil, err
   end

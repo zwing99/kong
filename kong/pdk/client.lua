@@ -164,12 +164,15 @@ local function new(self)
 
     return ngx.ctx.authenticated_credential
   end
+
+
   function _CLIENT.fetch_consumer(opts)
     local identifier = opts.identifier
     local consumer_cache_key = kong.db.consumers:cache_key(identifier)
     return kong.consumers_cache:get(consumer_cache_key,
       nil, _CLIENT.load_consumer, identifier, opts.search_by_username)
   end
+
 
   function _CLIENT.fetch_keyauth_credential(opts)
     local identifier = opts.identifier

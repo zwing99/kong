@@ -73,7 +73,8 @@ do
     keyauth_credentials = true,
     basicauth_credentials = true
   }
-
+  -- FIXME: cleanup and restrict to `GET` only
+  -- currently it's also allowed to PATCH, POST, DELETE
 
   -- DAO Routes
   for _, dao in pairs(kong.db.daos) do

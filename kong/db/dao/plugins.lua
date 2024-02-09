@@ -203,10 +203,23 @@ local function load_plugin_entity_strategy(schema, db, plugin)
   if not strategy then
     return nil, err
   end
+  print("schema.name = " .. require("inspect")(schema.name))
+  if (schema.name == "keyauth_credentials" or schema.name == "basicauth_credentials") and
+    kong.configuration.lazy_loaded_consumers == "on" and
+    kong.configuration.role == "data_plane" and
+    kong.configuration.database == "off" then
+
+    -- Also implement a simple connector for the lazy strategy
+    -- that only implemenets query.
+    local lazy_Strategy = require(fmt("kong.db.strategies.lazy"))
+    print("loading lazy strategy for schema.name: " .. schema.name)
+    strategy, err = lazy_Strategy.new(db.connector, schema, db.errors)
+  end
 
   local custom_strat = fmt("kong.plugins.%s.strategies.%s.%s",
                            plugin, db.strategy, schema.name)
   local exists, mod = load_module_if_exists(custom_strat)
+  print("exists = " .. require("inspect")(exists))
   if exists and mod then
     local parent_mt = getmetatable(strategy)
     local mt = {
