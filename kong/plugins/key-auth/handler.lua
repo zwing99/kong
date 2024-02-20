@@ -1,5 +1,6 @@
 local constants = require "kong.constants"
 local kong_meta = require "kong.meta"
+local cjson = require "cjson"
 
 local kong = kong
 local type = type
@@ -63,7 +64,7 @@ local function set_consumer(consumer, credential)
   end
 
   if consumer and consumer.custom_id then
-    set_header(HEADERS_CONSUMER_CUSTOM_ID, consumer.custom_id)
+    set_header(HEADERS_CONSUMER_CUSTOM_ID, consumer.custom_id == cjson.null and "" or consumer.custom_id)
   else
     clear_header(HEADERS_CONSUMER_CUSTOM_ID)
   end
@@ -193,6 +194,8 @@ local function do_authentication(conf)
 
   -- retrieve the consumer linked to this API key, to set appropriate headers
   local consumer, err, _ = kong.client.fetch_consumer({identifier = credential.consumer.id})
+  print("consumer = " .. require("inspect")(consumer))
+  print("err = " .. require("inspect")(err))
 
   if err then
     kong.log.err(err)

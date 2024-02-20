@@ -141,7 +141,6 @@ function _M.new(opts)
   }
 
   local ok, err = cluster_events:subscribe("invalidations", function(key)
-    log(DEBUG, "XXX: received invalidate event from cluster for key: '", key, "'")
     self:invalidate_local(key)
   end)
   if not ok then

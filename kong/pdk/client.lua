@@ -10,6 +10,7 @@
 
 local utils = require "kong.tools.utils"
 local phase_checker = require "kong.pdk.private.phases"
+local fetch_from_cp = require "kong.db.utils".fetch_from_cp
 
 
 local ngx = ngx
@@ -165,28 +166,58 @@ local function new(self)
     return ngx.ctx.authenticated_credential
   end
 
-
+  -- This function fetches a consumer from the cache or from the control plane (CP) if not found in the cache.
+  -- @param opts A table containing the options for fetching the consumer.
+  -- @field opts.identifier The identifier of the consumer to fetch.
+  -- @field opts.search_by_username A boolean indicating whether to search by username.
+  -- @return The consumer if found, or nil if not found.
   function _CLIENT.fetch_consumer(opts)
+    -- The identifier of the consumer to fetch.
     local identifier = opts.identifier
+    local search_by_username = opts.search_by_username or false
+
+
+    -- If lazy_loaded_consumers configuration is set to "on", use a function that fetches the consumer from the CP.
+    -- Otherwise, use the _CLIENT.load_consumer function.
+    local callback = kong.configuration.lazy_loaded_consumers == "on" and function(id, ...)
+      if search_by_username then
+        -- this actually doesn't need special handling here
+        -- the admin api supports searches by username or ID
+      end
+      return fetch_from_cp("/consumers/" .. id)
+    end or _CLIENT.load_consumer
+
+    -- Generate the cache key for the consumer.
     local consumer_cache_key = kong.db.consumers:cache_key(identifier)
-    return kong.consumers_cache:get(consumer_cache_key,
-      nil, _CLIENT.load_consumer, identifier, opts.search_by_username)
+    -- Try to get the consumer from the cache.
+    -- If the consumer is not found in the cache, use the provided callback function to fetch it.
+    return kong.consumers_cache:get(consumer_cache_key, nil, callback, identifier, search_by_username)
   end
 
-
+  -- This function fetches a key-auth credential from the cache or from the control plane (CP) if not found in the cache.
+  -- @param opts A table containing the options for fetching the key-auth credential.
+  -- @field opts.identifier The identifier of the key-auth credential to fetch.
+  -- @field opts.callback The callback function to use if the key-auth credential is not found in the cache.
+  -- @return The key-auth credential if found, or nil if not found.
   function _CLIENT.fetch_keyauth_credential(opts)
-    -- TODO: Moving this part out to the PDK is an experiement
-    -- to hide away the cache key generation and cache access from the plugin
-    -- There is a possibility that this part will be moved back to the plugin
-    -- as the dao isn't necessarily loaded but can be used from whereever else
-    -- On the other hand, you can use the DAO in other plugins _directly_ as well
+    -- The identifier of the key-auth credential to fetch.
     local identifier = opts.identifier
+    -- The callback function to use if the key-auth credential is not found in the cache.
     local cb = opts.callback
-    local credential_cache_key = kong.db.keyauth_credentials:cache_key(identifier)
-    -- hit_level be 1 if stale value is propelled into L1 cache; so set a minimal `resurrect_ttl`
-    return kong.credentials_cache:get(credential_cache_key, { resurrect_ttl = 0.001 }, cb, identifier)
-  end
 
+    -- If lazy_loaded_consumers configuration is set to "on", use a function that fetches the key-auth credential from the CP.
+    -- Otherwise, use the provided callback function.
+    local callback = kong.configuration.lazy_loaded_consumers == "on" and function(id)
+      return fetch_from_cp("/key-auths/" .. id)
+    end or cb
+
+    -- Generate the cache key for the key-auth credential.
+    local credential_cache_key = kong.db.keyauth_credentials:cache_key(identifier)
+    -- Try to get the key-auth credential from the cache.
+    -- If the key-auth credential is not found in the cache, use the provided callback function to fetch it.
+    -- The resurrect_ttl option is set to a minimal value to ensure that stale values are not propelled into the L1 cache.
+    return kong.credentials_cache:get(credential_cache_key, { resurrect_ttl = 0.001 }, callback, identifier)
+  end
 
   ---
   -- Returns the consumer from the datastore.

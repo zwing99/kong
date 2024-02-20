@@ -57,19 +57,19 @@ function _M.fetch_from_cp(resource)
   end
   print("res = " .. require("inspect")(res))
 
-  local cred = cjson.decode(res)
+  local data = cjson.decode(res)
 
-  if not cred then
+  if not data then
     return nil, "could not decode", -1
   end
 
-  if cred.message == "Not found" then
+  if data.message == "Not found" then
     -- FIXME: return a proper TTL after development is done
     return nil, nil, -1
   end
 
   -- FIXME: return a proper TTL after development is done
-  return cred, nil, -1
+  return data, nil, -1
 end
 
 local function visit(current, neighbors_map, visited, marked, sorted)
