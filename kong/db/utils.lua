@@ -3,7 +3,6 @@ local clustering_tls = require("kong.clustering.tls")
 local utils = require "kong.admin_gui.utils"
 local get_cluster_cert = clustering_tls.get_cluster_cert
 local get_cluster_cert_key = clustering_tls.get_cluster_cert_key
-local select_listener = utils.select_listener
 local fmt       = string.format
 local cjson    = require "cjson.safe"
 local http      = require "resty.http"
@@ -12,12 +11,24 @@ local _M = {}
 
 function _M.fetch_from_cp(resource)
   local kong_conf = kong.configuration
+  if not kong_conf then
+    return nil, "could not load kong configuration"
+  end
   local c = http.new()
 
   local control_plane_adr = kong_conf.cluster_control_plane
+  print("control_plane_adr = " .. require("inspect")(control_plane_adr))
   local host, port = control_plane_adr:match("([^:]+):([^:]+)")
   local cert = assert(get_cluster_cert(kong_conf))
+  if not cert then
+    return nil, "could not load cluster cert"
+  end
+  print("cert = " .. require("inspect")(cert))
   local cert_key = assert(get_cluster_cert_key(kong_conf))
+  if not cert_key then
+    return nil, "could not load cluster cert key"
+  end
+  print("cert_key = " .. require("inspect")(cert_key))
 
   -- Enable TLS
   c:set_timeout(5000) -- 2 sec
@@ -25,7 +36,8 @@ function _M.fetch_from_cp(resource)
     scheme = "https",
     host = host,
     port = port,
-    -- FIXME: verify cert when shipping
+    -- FIXME: verify cert when shipping, we use self-signed certs for anyway
+    -- should this be configurable?
     ssl_verify = false,
     ssl_client_cert = cert.cdata,
     ssl_client_priv_key = cert_key,

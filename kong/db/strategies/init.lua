@@ -57,12 +57,8 @@ function _M.new(kong_config, database, schemas, errors)
        kong_config.database == "off" then
 
       strategy = "lazy"
-      local lazy_Connector = require(fmt("kong.db.strategies.%s.connector", strategy))
-      local lazy_connector, err = lazy_Connector.new(kong_config)
-      -- Also implement a simple connector for the lazy strategy
-      -- that only implemenets query.
       local lazy_Strategy = require(fmt("kong.db.strategies.%s", strategy))
-      strategy, err = lazy_Strategy.new(lazy_connector, schema, errors)
+      strategy, err = lazy_Strategy.new(nil, schema, errors)
     end
     print("schema.name = " .. require("inspect")(schema.name))
     if not strategy then

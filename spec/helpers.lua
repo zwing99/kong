@@ -3261,6 +3261,7 @@ function kong_exec(cmd, env, returns, env_vars)
   for k, v in pairs(env) do
     env_vars = string.format("%s KONG_%s='%s'", env_vars, k:upper(), v)
   end
+  print("env_vars = " .. require("inspect")(env_vars))
 
   return exec(env_vars .. " " .. BIN_PATH .. " " .. cmd, returns)
 end
@@ -3681,6 +3682,7 @@ local function start_kong(env, tables, preserve_prefix, fixtures)
     env.declarative_config = config_yml
   end
 
+  print("env = " .. require("inspect")(env))
   assert(render_fixtures(TEST_CONF_PATH .. nginx_conf, env, prefix, fixtures))
   return kong_exec("start --conf " .. TEST_CONF_PATH .. nginx_conf .. nginx_conf_flags, env)
 end
@@ -3856,7 +3858,7 @@ do
   -- in above case, the id is 303.
   local msg_id = -1
   local prefix_dir = "servroot"
-  
+
   --- Check if echo server is ready.
   --
   -- @function is_echo_server_ready

@@ -124,6 +124,7 @@ function tls.get_cluster_cert(kong_config)
   local cn, parent_cn = nil, nil
   local err
 
+  print("kong_config = " .. require("inspect")(kong_config))
   raw, err = pl_file.read(kong_config.cluster_cert)
   if not raw then
     return nil, "failed reading the cluster certificate file: "

@@ -68,6 +68,7 @@ do
 
   local routes = {}
 
+  -- TODO: should this be a configuration option?
   local valid_schemas = {
     consumers = true,
     keyauth_credentials = true,
@@ -85,6 +86,7 @@ do
     end
   end
 
+
   -- Custom Routes
   for _, dao in pairs(kong.db.daos) do
     if valid_schemas[dao.schema.name] then
@@ -95,6 +97,7 @@ do
       end
     end
   end
+
 
   -- Plugin Routes
   if kong.configuration and kong.configuration.loaded_plugins then
@@ -120,11 +123,18 @@ do
     end
   end
 
+  -- restrict to GET
+  -- TODO: there is certainly a better way
+  for _, route in pairs(routes) do
+    local get = route.methods.GET
+    route.methods = { GET = get }
+  end
+
   assert(hooks.run_hook("api:init:post", app, routes))
 
   api_helpers.attach_new_db_routes(app, routes, "/v1/api")
 
-  app:match("cluster_events", "/v1/api/events", function(self)
+  app:get("cluster_events", "/v1/api/events", function(self)
     local events = {}
     local pg = self.req.params_get
     local min_at, max_at
@@ -132,8 +142,6 @@ do
       min_at = tonumber(pg.min_at)
       max_at = tonumber(pg.max_at)
     end
-    print("min_at = " .. require("inspect")(min_at))
-    print("max_at = " .. require("inspect")(max_at))
     for rows, err, page in kong.cluster_events.strategy:select_interval({"invalidations"}, min_at, max_at) do
       if err then
         return { status = 500, json = { message = "An unexpected error occurred" }}

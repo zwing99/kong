@@ -5,7 +5,8 @@ return {
   primary_key   = { "id" },
   endpoint_key  = "username",
   workspaceable = true,
-  db_export = kong.configuration.lazy_loaded_consumers == "off",
+  -- TODO: in tests, `kong` is not set yet.
+  db_export = kong and kong.configuration.lazy_loaded_consumers == "off",
 
   fields        = {
     { id = typedefs.uuid, },
