@@ -49,6 +49,7 @@ jobs:
     steps:
     - name: Bump max open files
       run: |
+          ulimit -a
           sudo echo 'kong soft nofile 65536' | sudo tee -a /etc/security/limits.d/kong-ci.conf
           sudo echo 'kong hard nofile 65536' | sudo tee -a /etc/security/limits.d/kong-ci.conf
           sudo echo "$(whoami) soft nofile 65536" | sudo tee -a /etc/security/limits.d/kong-ci.conf
