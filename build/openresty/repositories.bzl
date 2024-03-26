@@ -6,7 +6,7 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 load("@kong_bindings//:variables.bzl", "KONG_VAR")
 load("//build/openresty/pcre:pcre_repositories.bzl", "pcre_repositories")
 load("//build/openresty/openssl:openssl_repositories.bzl", "openssl_repositories")
-load("//build/openresty/atc_router:atc_router_repositories.bzl", "atc_router_repositories")
+load("//build/openresty/rust_libraries:rust_libraries_repositories.bzl", "rust_libraries_repositories")
 load("//build/openresty/wasmx:wasmx_repositories.bzl", "wasmx_repositories")
 load("//build/openresty/brotli:brotli_repositories.bzl", "brotli_repositories")
 
@@ -22,7 +22,7 @@ filegroup(
 def openresty_repositories():
     pcre_repositories()
     openssl_repositories()
-    atc_router_repositories()
+    rust_libraries_repositories()
     wasmx_repositories()
     brotli_repositories()
 
