@@ -1,6 +1,6 @@
 local helpers = require "spec.helpers"
-local declarative = require "kong.db.declarative"
-local declarative_config = require "kong.db.schema.others.declarative_config"
+local declarative = require "kong.components.datastore.declarative"
+local declarative_config = require "kong.components.datastore.schema.others.declarative_config"
 
 local fmod    = math.fmod
 
@@ -13,7 +13,7 @@ local function is_valid_page(rows, err, err_t)
 end
 
 for _, strategy in helpers.each_strategy() do
-  describe("kong.db [#" .. strategy .. "]", function()
+  describe("kong.components.datastore [#" .. strategy .. "]", function()
     local db, bp
 
     -- Note by default the page size is 100, we should keep this number

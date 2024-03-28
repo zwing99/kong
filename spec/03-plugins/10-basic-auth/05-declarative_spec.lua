@@ -1,4 +1,4 @@
-local declarative = require "kong.db.declarative"
+local declarative = require "kong.components.datastore.declarative"
 local helpers = require "spec.helpers"
 local crypto = require "kong.plugins.basic-auth.crypto"
 local cjson   = require "cjson"

@@ -1,4 +1,4 @@
-local typedefs = require "kong.db.schema.typedefs"
+local typedefs = require "kong.components.datastore.schema.typedefs"
 local redis_schema = require "kong.tools.redis.schema"
 
 local ORDERED_PERIODS = { "second", "minute", "hour", "day", "month", "year" }

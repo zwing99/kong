@@ -5,7 +5,7 @@
 -- at https://konghq.com/enterprisesoftwarelicense/.
 -- [ END OF LICENSE 0867164ffc95e54f04670b5169c09574bdbd9bba ]
 
-local typedefs = require "kong.db.schema.typedefs"
+local typedefs = require "kong.components.datastore.schema.typedefs"
 
 
 local PLUGIN_NAME = "PreserveNulls"

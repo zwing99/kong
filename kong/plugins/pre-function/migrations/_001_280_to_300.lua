@@ -1,4 +1,4 @@
-local operations = require "kong.db.migrations.operations.200_to_210"
+local operations = require "kong.components.datastore.migrations.operations.200_to_210"
 
 return function(plugin_name)
 

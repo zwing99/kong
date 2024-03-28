@@ -1,4 +1,4 @@
-local declarative_config = require "kong.db.schema.others.declarative_config"
+local declarative_config = require "kong.components.datastore.schema.others.declarative_config"
 local helpers = require "spec.helpers"
 local lyaml = require "lyaml"
 

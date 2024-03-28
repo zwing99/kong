@@ -1,9 +1,9 @@
 local utils        = require "kong.tools.utils"
 local constants    = require "kong.constants"
 local certificate  = require "kong.runloop.certificate"
-local balancer     = require "kong.runloop.balancer"
+local balancer     = require "kong.internal.balancer"
 local workspaces   = require "kong.workspaces"
-local wasm         = require "kong.runloop.wasm"
+local wasm         = require "kong.components.wasm"
 
 
 local kong         = kong

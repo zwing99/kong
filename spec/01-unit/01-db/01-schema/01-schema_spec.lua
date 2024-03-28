@@ -1,4 +1,4 @@
-local Schema = require "kong.db.schema"
+local Schema = require "kong.components.datastore.schema"
 local cjson  = require "cjson"
 local helpers = require "spec.helpers"
 
@@ -1663,7 +1663,7 @@ describe("schema", function()
     end)
 
     it("accepts a null in foreign if a null fails on bad foreign primary keys", function()
-      package.loaded["kong.db.schema.entities.schema-test"] = {
+      package.loaded["kong.components.datastore.schema.entities.schema-test"] = {
         name = "schema-test",
         primary_key = { "id" },
         fields = {
@@ -3637,8 +3637,8 @@ describe("schema", function()
       lazy_teardown(function()
         _G.kong = nil
         -- clear `_workspaceable` table cache
-        package.loaded["kong.db.schema"] = nil
-        Schema = require "kong.db.schema"
+        package.loaded["kong.components.datastore.schema"] = nil
+        Schema = require "kong.components.datastore.schema"
       end)
 
       it("dereference string type field", function()

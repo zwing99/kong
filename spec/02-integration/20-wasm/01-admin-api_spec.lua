@@ -22,7 +22,7 @@ describe("wasm admin API [#" .. strategy .. "]", function()
   local service, route
 
   lazy_setup(function()
-    require("kong.runloop.wasm").enable({
+    require("kong.components.wasm").enable({
       { name = "tests",
         path = FILTER_PATH .. "/tests.wasm",
       },

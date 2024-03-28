@@ -1,4 +1,4 @@
-local typedefs = require "kong.db.schema.typedefs"
+local typedefs = require "kong.components.datastore.schema.typedefs"
 local reserved_words = require "kong.plugins.acme.reserved_words"
 local redis_schema = require "kong.tools.redis.schema"
 

@@ -1,6 +1,6 @@
 local helpers = require "spec.helpers"
 local utils = require "kong.tools.utils"
-local schema_lib = require "kong.db.schema.json"
+local schema_lib = require "kong.components.datastore.schema.json"
 
 local FILTER_PATH = assert(helpers.test_conf.wasm_filters_path)
 
@@ -20,7 +20,7 @@ describe("wasm DB entities [#" .. strategy .. "]", function()
 
 
   lazy_setup(function()
-    require("kong.runloop.wasm").enable({
+    require("kong.components.wasm").enable({
       { name = "test",
         path = FILTER_PATH .. "/test.wasm",
       },

@@ -4,11 +4,11 @@ local get_phase = ngx.get_phase
 local lower = string.lower
 local ngx_timer_pending_count = ngx.timer.pending_count
 local ngx_timer_running_count = ngx.timer.running_count
-local balancer = require("kong.runloop.balancer")
+local balancer = require("kong.internal.balancer")
 local yield = require("kong.tools.yield").yield
 local get_all_upstreams = balancer.get_all_upstreams
 if not balancer.get_all_upstreams then -- API changed since after Kong 2.5
-  get_all_upstreams = require("kong.runloop.balancer.upstreams").get_all_upstreams
+  get_all_upstreams = require("kong.internal.balancer.upstreams").get_all_upstreams
 end
 
 local CLUSTERING_SYNC_STATUS = require("kong.constants").CLUSTERING_SYNC_STATUS

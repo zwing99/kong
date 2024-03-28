@@ -3,7 +3,7 @@ local Plugin =  {
   PRIORITY = 1000,
 }
 
-local clustering = require("kong.clustering")
+local clustering = require("kong.components.clustering")
 local saved_init_dp_worker = clustering.init_dp_worker
 
 -- monkey-patch cluster initializer so that konnect_mode is
@@ -14,7 +14,7 @@ clustering.init_dp_worker = function(self, ...)
 end
 
 
-local declarative = require("kong.db.declarative")
+local declarative = require("kong.components.datastore.declarative")
 local saved_load_into_cache = declarative.load_into_cache_with_events
 
 -- ...and monkey-patch this to throw an exception on demand

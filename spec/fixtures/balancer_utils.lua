@@ -1,5 +1,5 @@
 local cjson = require "cjson"
-local declarative = require "kong.db.declarative"
+local declarative = require "kong.components.datastore.declarative"
 local helpers = require "spec.helpers"
 local utils = require "kong.tools.utils"
 local https_server = require "spec.fixtures.https_server"

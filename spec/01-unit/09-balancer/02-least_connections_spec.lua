@@ -159,12 +159,12 @@ describe("[least-connections]", function()
 
   setup(function()
     _G.package.loaded["kong.resty.dns.client"] = nil -- make sure module is reloaded
-    _G.package.loaded["kong.runloop.balancer.targets"] = nil -- make sure module is reloaded
+    _G.package.loaded["kong.internal.balancer.targets"] = nil -- make sure module is reloaded
 
     client = require "kong.resty.dns.client"
-    targets = require "kong.runloop.balancer.targets"
-    balancers = require "kong.runloop.balancer.balancers"
-    local healthcheckers = require "kong.runloop.balancer.healthcheckers"
+    targets = require "kong.internal.balancer.targets"
+    balancers = require "kong.internal.balancer.balancers"
+    local healthcheckers = require "kong.internal.balancer.healthcheckers"
     healthcheckers.init()
     balancers.init()
 

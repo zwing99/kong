@@ -1,6 +1,6 @@
 local pl_path = require "pl.path"
 local helpers = require "spec.helpers"
-local inject_confs = require "kong.cmd.utils.inject_confs"
+local inject_confs = require "kong.components.cli.utils.inject_confs"
 local compile_confs = inject_confs.compile_confs
 local currentdir = pl_path.currentdir
 local fmt = string.format

@@ -22,7 +22,7 @@ describe("proxy-wasm filters (#wasm) (#" .. strategy .. ")", function()
   local hosts_file
 
   lazy_setup(function()
-    require("kong.runloop.wasm").enable({
+    require("kong.components.wasm").enable({
       { name = "tests",
         path = helpers.test_conf.wasm_filters_path .. "/tests.wasm",
       },

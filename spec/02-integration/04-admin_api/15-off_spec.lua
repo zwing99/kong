@@ -3,13 +3,13 @@ local lyaml    = require "lyaml"
 local utils    = require "kong.tools.utils"
 local pl_utils = require "pl.utils"
 local helpers  = require "spec.helpers"
-local Errors   = require "kong.db.errors"
+local Errors   = require "kong.components.datastore.errors"
 local mocker   = require("spec.fixtures.mocker")
 local deepcompare  = require("pl.tablex").deepcompare
 local inspect = require "inspect"
 local nkeys = require "table.nkeys"
-local typedefs = require "kong.db.schema.typedefs"
-local schema = require "kong.db.schema"
+local typedefs = require "kong.components.datastore.schema.typedefs"
+local schema = require "kong.components.datastore.schema"
 
 local WORKER_SYNC_TIMEOUT = 10
 local LMDB_MAP_SIZE = "10m"
@@ -2911,7 +2911,7 @@ describe("Admin API #off with Unique Foreign #unique", function()
     assert.equal(references.data[1].note, "note")
     assert.equal(references.data[1].unique_foreign.id, foreigns.data[1].id)
 
-    local declarative = require "kong.db.declarative"
+    local declarative = require "kong.components.datastore.declarative"
     local key = declarative.unique_field_key("unique_references", "", "unique_foreign",
                                              foreigns.data[1].id, true)
 
@@ -2926,7 +2926,7 @@ describe("Admin API #off with Unique Foreign #unique", function()
 
     assert.not_equals("", result, "empty result from unique lookup")
 
-    local cached_reference = assert(require("kong.db.declarative.marshaller").unmarshall(result))
+    local cached_reference = assert(require("kong.components.datastore.declarative.marshaller").unmarshall(result))
     assert.same(cached_reference, references.data[1])
 
     local cache = {

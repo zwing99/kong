@@ -5,7 +5,7 @@ local cjson = require "cjson.safe"
 
 local pl_stringx = require("pl.stringx")
 local date = require("date")
-local get_request_id = require("kong.tracing.request_id").get
+local get_request_id = require("kong.components.tracing.request_id").get
 
 local EMPTY = {}
 

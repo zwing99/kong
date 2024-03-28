@@ -2,23 +2,23 @@
 
 local meta         = require "kong.meta"
 local utils        = require "kong.tools.utils"
-local Router       = require "kong.router"
-local balancer     = require "kong.runloop.balancer"
+local Router       = require "kong.internal.router"
+local balancer     = require "kong.internal.balancer"
 local events       = require "kong.runloop.events"
-local wasm         = require "kong.runloop.wasm"
+local wasm         = require "kong.components.wasm"
 local upstream_ssl = require "kong.runloop.upstream_ssl"
 local reports      = require "kong.reports"
 local constants    = require "kong.constants"
 local concurrency  = require "kong.concurrency"
 local lrucache     = require "resty.lrucache"
 local ktls         = require "resty.kong.tls"
-local request_id   = require "kong.tracing.request_id"
+local request_id   = require "kong.components.tracing.request_id"
 
 
-local PluginsIterator = require "kong.runloop.plugins_iterator"
+local PluginsIterator = require "kong.components.plugins_iterator"
 local log_level       = require "kong.runloop.log_level"
-local instrumentation = require "kong.tracing.instrumentation"
-local req_dyn_hook   = require "kong.dynamic_hook"
+local instrumentation = require "kong.components.tracing.instrumentation"
+local req_dyn_hook   = require "kong.internal.dynamic_hook"
 
 
 local kong              = kong

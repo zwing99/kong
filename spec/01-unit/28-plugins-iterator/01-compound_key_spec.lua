@@ -1,4 +1,4 @@
-local build_compound_key = require("kong.runloop.plugins_iterator").build_compound_key
+local build_compound_key = require("kong.components.plugins_iterator").build_compound_key
 
 describe("Testing build_compound_key function", function()
   it("Should create a compound key with all three IDs", function()

@@ -1,4 +1,4 @@
-local typedefs = require "kong.db.schema.typedefs"
+local typedefs = require "kong.components.datastore.schema.typedefs"
 
 local function validate_flows(config)
   if config.enable_authorization_code

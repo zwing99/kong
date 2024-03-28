@@ -141,17 +141,17 @@ for _, consistency in ipairs({"strict", "eventual"}) do
     lazy_setup(function()
       stub(ngx, "log")
 
-      package.loaded["kong.runloop.balancer"] = nil
-      package.loaded["kong.runloop.balancer.targets"] = nil
-      package.loaded["kong.runloop.balancer.upstreams"] = nil
-      package.loaded["kong.runloop.balancer.balancers"] = nil
-      package.loaded["kong.runloop.balancer.healthcheckers"] = nil
+      package.loaded["kong.internal.balancer"] = nil
+      package.loaded["kong.internal.balancer.targets"] = nil
+      package.loaded["kong.internal.balancer.upstreams"] = nil
+      package.loaded["kong.internal.balancer.balancers"] = nil
+      package.loaded["kong.internal.balancer.healthcheckers"] = nil
 
-      balancer = require "kong.runloop.balancer"
-      targets = require "kong.runloop.balancer.targets"
-      upstreams = require "kong.runloop.balancer.upstreams"
-      balancers = require "kong.runloop.balancer.balancers"
-      healthcheckers = require "kong.runloop.balancer.healthcheckers"
+      balancer = require "kong.internal.balancer"
+      targets = require "kong.internal.balancer.targets"
+      upstreams = require "kong.internal.balancer.upstreams"
+      balancers = require "kong.internal.balancer.balancers"
+      healthcheckers = require "kong.internal.balancer.healthcheckers"
 
       local hc_defaults = {
         active = {

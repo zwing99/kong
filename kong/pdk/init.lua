@@ -231,7 +231,7 @@ function _PDK.new(kong_config, self)
 
   self.configuration = setmetatable({
     remove_sensitive = function()
-      local conf_loader = require "kong.conf_loader"
+      local conf_loader = require "kong.internal.conf_loader"
       return conf_loader.remove_sensitive(kong_config)
     end,
   }, {

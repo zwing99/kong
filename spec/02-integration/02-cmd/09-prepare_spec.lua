@@ -1,5 +1,5 @@
 local helpers = require "spec.helpers"
-local signals = require "kong.cmd.utils.nginx_signals"
+local signals = require "kong.components.cli.utils.nginx_signals"
 local shell = require "resty.shell"
 
 

@@ -1,17 +1,17 @@
-local Plugins = require("kong.db.dao.plugins")
-local Entity = require("kong.db.schema.entity")
-local Errors = require("kong.db.errors")
+local Plugins = require("kong.components.datastore.dao.plugins")
+local Entity = require("kong.components.datastore.schema.entity")
+local Errors = require("kong.components.datastore.errors")
 require("spec.helpers") -- add spec/fixtures/custom_plugins to package.path
 
 
-describe("kong.db.dao.plugins", function()
+describe("kong.components.datastore.dao.plugins", function()
   local self
 
   before_each(function()
-    assert(Entity.new(require("kong.db.schema.entities.services")))
-    assert(Entity.new(require("kong.db.schema.entities.routes")))
-    assert(Entity.new(require("kong.db.schema.entities.consumers")))
-    local schema = assert(Entity.new(require("kong.db.schema.entities.plugins")))
+    assert(Entity.new(require("kong.components.datastore.schema.entities.services")))
+    assert(Entity.new(require("kong.components.datastore.schema.entities.routes")))
+    assert(Entity.new(require("kong.components.datastore.schema.entities.consumers")))
+    local schema = assert(Entity.new(require("kong.components.datastore.schema.entities.plugins")))
 
     local errors = Errors.new("mock")
     self = {

@@ -17,7 +17,7 @@ local cjson = require "cjson.safe"
 local checks = require "kong.pdk.private.checks"
 local phase_checker = require "kong.pdk.private.phases"
 local utils = require "kong.tools.utils"
-local request_id = require "kong.tracing.request_id"
+local request_id = require "kong.components.tracing.request_id"
 local constants = require "kong.constants"
 
 

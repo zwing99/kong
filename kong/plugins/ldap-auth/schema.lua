@@ -1,4 +1,4 @@
-local typedefs = require "kong.db.schema.typedefs"
+local typedefs = require "kong.components.datastore.schema.typedefs"
 
 -- If you add more configuration parameters, be sure to check if it needs to be added to cache key
 -- Fields currently used for cache_key: ldap_host, ldap_port, base_dn, attribute, cache_ttl

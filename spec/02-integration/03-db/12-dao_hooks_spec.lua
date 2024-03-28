@@ -3,7 +3,7 @@ local hooks = require "kong.hooks"
 
 
 for _, strategy in helpers.each_strategy() do
-  describe("kong.db hooks [#" .. strategy .. "]", function()
+  describe("kong.components.datastore hooks [#" .. strategy .. "]", function()
     local db, bp, s1, r1
 
     lazy_setup(function()

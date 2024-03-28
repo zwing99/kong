@@ -1,7 +1,7 @@
-local Schema = require("kong.db.schema.init")
-local Entity = require("kong.db.schema.entity")
-local DAO = require("kong.db.dao.init")
-local errors = require("kong.db.errors")
+local Schema = require("kong.components.datastore.schema.init")
+local Entity = require("kong.components.datastore.schema.entity")
+local DAO = require("kong.components.datastore.dao.init")
+local errors = require("kong.components.datastore.errors")
 local utils = require("kong.tools.utils")
 local hooks = require("kong.hooks")
 

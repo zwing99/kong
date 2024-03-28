@@ -1,4 +1,4 @@
-local Schema = require("kong.db.schema")
+local Schema = require("kong.components.datastore.schema")
 
 describe("Plugin: file-log (schema)", function()
 

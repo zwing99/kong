@@ -1,7 +1,7 @@
-local calculate_config_hash = require("kong.clustering.config_helper").calculate_config_hash
-local version = require("kong.clustering.compat.version")
+local calculate_config_hash = require("kong.components.clustering.config_helper").calculate_config_hash
+local version = require("kong.components.clustering.compat.version")
 
-describe("kong.clustering.compat.version", function()
+describe("kong.components.clustering.compat.version", function()
   it("correctly parses 3 or 4 digit version numbers", function()
     assert.equal(3000000000, version.string_to_number("3.0.0"))
     assert.equal(3000001000, version.string_to_number("3.0.1"))
@@ -15,7 +15,7 @@ end)
 local DECLARATIVE_EMPTY_CONFIG_HASH = require("kong.constants").DECLARATIVE_EMPTY_CONFIG_HASH
 
 
-describe("kong.clustering", function()
+describe("kong.components.clustering", function()
   describe(".calculate_config_hash()", function()
     it("calculating hash for nil", function()
       local hash = calculate_config_hash(nil)

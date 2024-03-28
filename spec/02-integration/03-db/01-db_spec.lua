@@ -1,4 +1,4 @@
-local DB      = require "kong.db"
+local DB      = require "kong.components.datastore"
 local helpers = require "spec.helpers"
 local utils   = require "kong.tools.utils"
 
@@ -23,7 +23,7 @@ describe("db_spec [#" .. strategy .. "]", function()
     helpers.bootstrap_database(db)
   end)
 
-  describe("kong.db.init", function()
+  describe("kong.components.datastore.init", function()
     describe(".new()", function()
       it("errors on invalid arg", function()
         assert.has_error(function()

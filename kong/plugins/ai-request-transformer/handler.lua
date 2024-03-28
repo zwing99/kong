@@ -3,7 +3,7 @@ local _M = {}
 -- imports
 local kong_meta     = require "kong.meta"
 local fmt           = string.format
-local llm           = require("kong.llm")
+local llm           = require("kong.internal.llm")
 --
 
 _M.PRIORITY = 777

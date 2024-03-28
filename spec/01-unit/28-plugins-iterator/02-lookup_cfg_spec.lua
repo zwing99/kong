@@ -1,4 +1,4 @@
-local PluginsIterator = require("kong.runloop.plugins_iterator")
+local PluginsIterator = require("kong.components.plugins_iterator")
 
 describe("PluginsIterator.lookup_cfg", function()
 	local combos = {

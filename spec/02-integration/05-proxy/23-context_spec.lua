@@ -14,10 +14,10 @@ local function reload_router(flavor)
 
   package.loaded["spec.helpers"] = nil
   package.loaded["kong.global"] = nil
-  package.loaded["kong.cache"] = nil
-  package.loaded["kong.db"] = nil
-  package.loaded["kong.db.schema.entities.routes"] = nil
-  package.loaded["kong.db.schema.entities.routes_subschemas"] = nil
+  package.loaded["kong.internal.cache"] = nil
+  package.loaded["kong.components.datastore"] = nil
+  package.loaded["kong.components.datastore.schema.entities.routes"] = nil
+  package.loaded["kong.components.datastore.schema.entities.routes_subschemas"] = nil
 
   helpers = require "spec.helpers"
 

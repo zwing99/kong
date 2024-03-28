@@ -1,15 +1,15 @@
-local compat = require("kong.clustering.compat")
+local compat = require("kong.components.clustering.compat")
 local helpers = require ("spec.helpers")
-local declarative = require("kong.db.declarative")
+local declarative = require("kong.components.datastore.declarative")
 local inflate_gzip = require("kong.tools.gzip").inflate_gzip
 local cjson_decode = require("cjson.safe").decode
 local ssl_fixtures = require ("spec.fixtures.ssl")
 
 local function reset_fields()
-  compat._set_removed_fields(require("kong.clustering.compat.removed_fields"))
+  compat._set_removed_fields(require("kong.components.clustering.compat.removed_fields"))
 end
 
-describe("kong.clustering.compat", function()
+describe("kong.components.clustering.compat", function()
   describe("calculating fields to remove", function()
     before_each(reset_fields)
     after_each(reset_fields)

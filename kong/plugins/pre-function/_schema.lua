@@ -1,8 +1,8 @@
 -- schema file for both the pre-function and post-function plugin
 return function(plugin_name)
 
-  local Schema = require "kong.db.schema"
-  local typedefs = require "kong.db.schema.typedefs"
+  local Schema = require "kong.components.datastore.schema"
+  local typedefs = require "kong.components.datastore.schema.typedefs"
 
   local loadstring = loadstring
 

@@ -22,7 +22,7 @@ for _, strategy in helpers.each_strategy() do
       assert(fd:write("127.0.0.1 " .. constants.REPORTS.ADDRESS))
       assert(fd:close())
 
-      require("kong.runloop.wasm").enable({
+      require("kong.components.wasm").enable({
         { name = "tests",
           path = helpers.test_conf.wasm_filters_path .. "/tests.wasm",
         },

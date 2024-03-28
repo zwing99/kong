@@ -4,7 +4,7 @@ local mocker = require("spec.fixtures.mocker")
 local function setup_it_block()
   mocker.setup(finally, {
     modules = {
-      {"kong.db.strategies", {
+      {"kong.components.datastore.strategies", {
         new = function()
           local connector = {
             defaults = {
@@ -32,7 +32,7 @@ local function setup_it_block()
           return connector, strategies
         end,
       }},
-      {"kong.db", {}},
+      {"kong.components.datastore", {}},
     }
   })
 end
@@ -45,7 +45,7 @@ describe("DB", function()
     it("returns the state of migrations", function()
       setup_it_block()
 
-      local DB = require("kong.db")
+      local DB = require("kong.components.datastore")
 
       local kong_config = {
         loaded_plugins = {},
@@ -65,7 +65,7 @@ describe("DB", function()
     it("returns the last fetched state of migrations", function()
       setup_it_block()
 
-      local DB = require("kong.db")
+      local DB = require("kong.components.datastore")
 
       local kong_config = {
         loaded_plugins = {},
@@ -112,7 +112,7 @@ describe("DB", function()
     }
 
     lazy_setup(function()
-      local DB = require("kong.db")
+      local DB = require("kong.components.datastore")
       db.check_version_compat = DB.check_version_compat
     end)
 
@@ -156,7 +156,7 @@ describe("DB", function()
 
     describe("deprecated <= db_ver < min", function()
       it("logs deprecation warning", function()
-        local log = require "kong.cmd.utils.log"
+        local log = require "kong.components.cli.utils.log"
         local s = spy.on(log, "warn")
 
         local versions_to_test = {

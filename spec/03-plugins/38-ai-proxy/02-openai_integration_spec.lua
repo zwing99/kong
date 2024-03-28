@@ -895,7 +895,7 @@ for _, strategy in helpers.all_strategies() do if strategy ~= "cassandra" then
 
     describe("one-shot request", function()
       it("success", function()
-        local ai_driver = require("kong.llm.drivers.openai")
+        local ai_driver = require("kong.internal.llm.drivers.openai")
   
         local plugin_conf = {
           route_type = "llm/v1/chat",
@@ -949,7 +949,7 @@ for _, strategy in helpers.all_strategies() do if strategy ~= "cassandra" then
       end)
 
       it("404", function()
-        local ai_driver = require("kong.llm.drivers.openai")
+        local ai_driver = require("kong.internal.llm.drivers.openai")
   
         local plugin_conf = {
           route_type = "llm/v1/chat",

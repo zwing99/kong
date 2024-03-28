@@ -40,11 +40,11 @@ local BLACKHOLE_HOST = "10.255.255.255"
 local KONG_VERSION = require("kong.meta")._VERSION
 local PLUGINS_LIST
 
-local consumers_schema_def = require "kong.db.schema.entities.consumers"
-local services_schema_def = require "kong.db.schema.entities.services"
-local plugins_schema_def = require "kong.db.schema.entities.plugins"
-local routes_schema_def = require "kong.db.schema.entities.routes"
-local prefix_handler = require "kong.cmd.utils.prefix_handler"
+local consumers_schema_def = require "kong.components.datastore.schema.entities.consumers"
+local services_schema_def = require "kong.components.datastore.schema.entities.services"
+local plugins_schema_def = require "kong.components.datastore.schema.entities.plugins"
+local routes_schema_def = require "kong.components.datastore.schema.entities.routes"
+local prefix_handler = require "kong.components.cli.utils.prefix_handler"
 local dc_blueprints = require "spec.fixtures.dc_blueprints"
 local conf_loader = require "kong.conf_loader"
 local kong_global = require "kong.global"
@@ -58,15 +58,15 @@ local pl_file = require "pl.file"
 local version = require "version"
 local pl_dir = require "pl.dir"
 local pl_Set = require "pl.Set"
-local Schema = require "kong.db.schema"
-local Entity = require "kong.db.schema.entity"
+local Schema = require "kong.components.datastore.schema"
+local Entity = require "kong.components.datastore.schema.entity"
 local cjson = require "cjson.safe"
 local utils = require "kong.tools.utils"
 local http = require "resty.http"
 local pkey = require "resty.openssl.pkey"
-local nginx_signals = require "kong.cmd.utils.nginx_signals"
-local log = require "kong.cmd.utils.log"
-local DB = require "kong.db"
+local nginx_signals = require "kong.components.cli.utils.nginx_signals"
+local log = require "kong.components.cli.utils.log"
+local DB = require "kong.components.datastore"
 local shell = require "resty.shell"
 local ffi = require "ffi"
 local ssl = require "ngx.ssl"
@@ -3781,7 +3781,7 @@ local function start_kong(env, tables, preserve_prefix, fixtures)
     if not config_yml then
       config_yml = prefix .. "/config.yml"
       local cfg = dcbp.done()
-      local declarative = require "kong.db.declarative"
+      local declarative = require "kong.components.datastore.declarative"
       local ok, err = declarative.to_yaml_file(cfg, config_yml)
       if not ok then
         return nil, err
@@ -4331,7 +4331,7 @@ end
 
   -- Only use in CLI tests from spec/02-integration/01-cmd
   kill_all = function(prefix, timeout)
-    local kill = require "kong.cmd.utils.kill"
+    local kill = require "kong.components.cli.utils.kill"
 
     local running_conf = get_running_conf(prefix)
     if not running_conf then return end
@@ -4355,7 +4355,7 @@ end
   end,
 
   signal = function(prefix, signal, pid_path)
-    local kill = require "kong.cmd.utils.kill"
+    local kill = require "kong.components.cli.utils.kill"
 
     if not pid_path then
       local running_conf = get_running_conf(prefix)

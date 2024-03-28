@@ -835,7 +835,7 @@ describe("Utils", function()
 
   describe("topological_sort", function()
     local get_neighbors = function(x) return x end
-    local ts = require("kong.db.utils").topological_sort
+    local ts = require("kong.components.datastore.utils").topological_sort
 
     it("it puts destinations first", function()
       local a = { id = "a" }

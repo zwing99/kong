@@ -1,5 +1,5 @@
 local helpers = require "spec.helpers"
-local Errors = require "kong.db.errors"
+local Errors = require "kong.components.datastore.errors"
 local cjson = require "cjson"
 
 

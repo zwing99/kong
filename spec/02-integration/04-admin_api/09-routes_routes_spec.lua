@@ -1,7 +1,7 @@
 local cjson   = require "cjson"
 local utils   = require "kong.tools.utils"
 local helpers = require "spec.helpers"
-local Errors  = require "kong.db.errors"
+local Errors  = require "kong.components.datastore.errors"
 
 
 local unindent = helpers.unindent

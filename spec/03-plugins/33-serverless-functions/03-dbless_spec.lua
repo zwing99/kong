@@ -1,6 +1,6 @@
 local helpers = require "spec.helpers"
 
-local strategies = require("kong.db.strategies").STRATEGIES
+local strategies = require("kong.components.datastore.strategies").STRATEGIES
 
 -- set tests as pending for kongs without strategy 'off'
 local describe = describe

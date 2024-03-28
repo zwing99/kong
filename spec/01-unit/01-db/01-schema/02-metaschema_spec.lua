@@ -1,6 +1,6 @@
-local Schema = require "kong.db.schema"
+local Schema = require "kong.components.datastore.schema"
 local helpers = require "spec.helpers"
-local MetaSchema = require "kong.db.schema.metaschema"
+local MetaSchema = require "kong.components.datastore.schema.metaschema"
 local constants = require "kong.constants"
 
 
@@ -587,7 +587,7 @@ describe("metaschema", function()
   end)
 
   it("validates the routes schema", function()
-    local Routes = require("kong.db.schema.entities.routes")
+    local Routes = require("kong.components.datastore.schema.entities.routes")
     assert.truthy(MetaSchema:validate(Routes))
     Schema.new(Routes)
     -- do it a second time to show that Schema.new does not corrupt the table
@@ -595,7 +595,7 @@ describe("metaschema", function()
   end)
 
   it("validates the services schema", function()
-    local Services = require("kong.db.schema.entities.services")
+    local Services = require("kong.components.datastore.schema.entities.services")
     assert.truthy(MetaSchema:validate(Services))
   end)
 

@@ -68,33 +68,33 @@ local PHASES = kong_global.phases
 _G.kong = kong_global.new() -- no versioned PDK for plugins for now
 
 
-local DB = require "kong.db"
+local DB = require "kong.components.datastore"
 local dns = require "kong.tools.dns"
 local meta = require "kong.meta"
 local lapis = require "lapis"
 local runloop = require "kong.runloop.handler"
 local stream_api = require "kong.tools.stream_api"
-local declarative = require "kong.db.declarative"
+local declarative = require "kong.components.datastore.declarative"
 local ngx_balancer = require "ngx.balancer"
 local kong_resty_ctx = require "kong.resty.ctx"
 local certificate = require "kong.runloop.certificate"
 local concurrency = require "kong.concurrency"
-local cache_warmup = require "kong.cache.warmup"
-local balancer = require "kong.runloop.balancer"
-local kong_error_handlers = require "kong.error_handlers"
-local plugin_servers = require "kong.runloop.plugin_servers"
+local cache_warmup = require "kong.internal.cache.warmup"
+local balancer = require "kong.internal.balancer"
+local kong_error_handlers = require "kong.internal.restful.error_handlers"
+local plugin_servers = require "kong.internal.plugin_servers"
 local lmdb_txn = require "resty.lmdb.transaction"
-local instrumentation = require "kong.tracing.instrumentation"
+local instrumentation = require "kong.components.tracing.instrumentation"
 local process = require "ngx.process"
 local tablepool = require "tablepool"
 local table_new = require "table.new"
 local utils = require "kong.tools.utils"
 local get_ctx_table = require("resty.core.ctx").get_ctx_table
-local admin_gui = require "kong.admin_gui"
-local wasm = require "kong.runloop.wasm"
+local admin_gui = require "kong.components.gui"
+local wasm = require "kong.components.wasm"
 local reports = require "kong.reports"
 local pl_file = require "pl.file"
-local req_dyn_hook = require "kong.dynamic_hook"
+local req_dyn_hook = require "kong.internal.dynamic_hook"
 
 
 local kong             = kong
@@ -628,7 +628,7 @@ local Kong = {}
 
 function Kong.init()
   local pl_path = require "pl.path"
-  local conf_loader = require "kong.conf_loader"
+  local conf_loader = require "kong.internal.conf_loader"
 
   -- check if kong global is the correct one
   if not kong.version then
@@ -658,7 +658,7 @@ function Kong.init()
   -- check state of migration only if there is an external database
   if not is_dbless(config) then
     ngx_log(ngx_DEBUG, "checking database schema state")
-    local migrations_utils = require "kong.cmd.utils.migrations"
+    local migrations_utils = require "kong.components.cli.utils.migrations"
     schema_state = assert(db:schema_state())
     migrations_utils.check_state(schema_state)
 
@@ -686,7 +686,7 @@ function Kong.init()
 
   if is_http_module and (is_data_plane(config) or is_control_plane(config))
   then
-    kong.clustering = require("kong.clustering").new(config)
+    kong.clustering = require("kong.components.clustering").new(config)
   end
 
   assert(db.vaults:load_vault_schemas(config.loaded_vaults))
@@ -1848,7 +1848,7 @@ function Kong.admin_content()
     ctx.workspace = kong.default_workspace
   end
 
-  return serve_content("kong.api")
+  return serve_content("kong.components.restful")
 end
 
 
@@ -1913,7 +1913,7 @@ function Kong.admin_gui_log()
 end
 
 function Kong.status_content()
-  return serve_content("kong.status")
+  return serve_content("kong.components.status")
 end
 
 

@@ -2,7 +2,7 @@ local helpers = require "spec.helpers"
 
 
 for _, strategy in helpers.each_strategy() do
-  describe("kong.db [#" .. strategy .. "]", function()
+  describe("kong.components.datastore [#" .. strategy .. "]", function()
     local db
 
 

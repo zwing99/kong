@@ -3,7 +3,7 @@ local pl_file = require("pl.file")
 local pl_replace = require("pl.stringx").replace
 local cjson = require("cjson.safe")
 local fmt = string.format
-local llm = require("kong.llm")
+local llm = require("kong.internal.llm")
 
 local SAMPLE_LLM_V1_CHAT = {
   messages = {
@@ -259,7 +259,7 @@ describe(PLUGIN_NAME .. ": (unit)", function()
         describe(k .. " format test", function()
 
           local actual_request_table
-          local driver = require("kong.llm.drivers." .. l.provider)
+          local driver = require("kong.internal.llm.drivers." .. l.provider)
 
 
           -- what we do is first put the SAME request message from the user, through the converter, for this provider/format
@@ -383,7 +383,7 @@ describe(PLUGIN_NAME .. ": (unit)", function()
 
   -- generic tests
   it("throws correct error when format is not supported", function()
-    local driver = require("kong.llm.drivers.mistral")  -- one-shot, random example of provider with only prompt support
+    local driver = require("kong.internal.llm.drivers.mistral")  -- one-shot, random example of provider with only prompt support
     
     local model_config = {
       route_type = "llm/v1/chatnopenotsupported",

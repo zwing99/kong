@@ -1,5 +1,5 @@
-local typedefs = require "kong.db.schema.typedefs"
-local is_regex = require("kong.db.schema").validators.is_regex
+local typedefs = require "kong.components.datastore.schema.typedefs"
+local is_regex = require("kong.components.datastore.schema").validators.is_regex
 
 
 local METHODS = {

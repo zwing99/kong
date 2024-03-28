@@ -1,5 +1,5 @@
-local consumers = require "kong.db.schema.entities.consumers"
-local Entity       = require "kong.db.schema.entity"
+local consumers = require "kong.components.datastore.schema.entities.consumers"
+local Entity       = require "kong.components.datastore.schema.entity"
 
 local Consumers = assert(Entity.new(consumers))
 

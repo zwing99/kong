@@ -25,7 +25,7 @@ for _, strategy in helpers.each_strategy({ "postgres", "off" }) do
 
 describe("#wasm filter execution (#" .. strategy .. ")", function()
   lazy_setup(function()
-    require("kong.runloop.wasm").enable({
+    require("kong.components.wasm").enable({
       { name = "tests",
         path = FILTER_PATH .. "/tests.wasm",
       },

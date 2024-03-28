@@ -1,6 +1,6 @@
 local helpers = require "spec.helpers"
 local utils = require "kong.tools.utils"
-local declarative = require "kong.db.declarative"
+local declarative = require "kong.components.datastore.declarative"
 
 -- Note: include "off" strategy here as well
 for _, strategy in helpers.all_strategies() do

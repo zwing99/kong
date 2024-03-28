@@ -1,4 +1,4 @@
-local cache_warmup = require("kong.cache.warmup")
+local cache_warmup = require("kong.internal.cache.warmup")
 local helpers = require("spec.helpers")
 
 

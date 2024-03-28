@@ -2,8 +2,8 @@ local Queue = require "kong.tools.queue"
 local http = require "resty.http"
 local clone = require "table.clone"
 local otlp = require "kong.plugins.opentelemetry.otlp"
-local propagation = require "kong.tracing.propagation"
-local tracing_context = require "kong.tracing.tracing_context"
+local propagation = require "kong.components.tracing.propagation"
+local tracing_context = require "kong.components.tracing.tracing_context"
 
 
 local ngx = ngx

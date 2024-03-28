@@ -1,5 +1,5 @@
-local typedefs = require("kong.db.schema.typedefs")
-local llm = require("kong.llm")
+local typedefs = require("kong.components.datastore.schema.typedefs")
+local llm = require("kong.internal.llm")
 
 
 

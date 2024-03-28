@@ -1,4 +1,4 @@
-local api_helpers = require "kong.api.api_helpers"
+local api_helpers = require "kong.components.restful.api_helpers"
 local norm = api_helpers.normalize_nested_params
 
 describe("api_helpers", function()

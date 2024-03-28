@@ -3,7 +3,7 @@
 setmetatable(_G, nil)
 package.path = (os.getenv("KONG_LUA_PATH_OVERRIDE") or "") .. "./?.lua;./?/init.lua;" .. package.path
 
-local kill = require "kong.cmd.utils.kill"
+local kill = require "kong.components.cli.utils.kill"
 local kong_default_conf = require "kong.templates.kong_defaults"
 local pl_app = require "pl.lapp"
 local pl_config = require "pl.config"

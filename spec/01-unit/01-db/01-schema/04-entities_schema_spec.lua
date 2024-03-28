@@ -1,4 +1,4 @@
-local Entity = require "kong.db.schema.entity"
+local Entity = require "kong.components.datastore.schema.entity"
 
 
 describe("entity schema", function()

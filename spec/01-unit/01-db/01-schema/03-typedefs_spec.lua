@@ -1,5 +1,5 @@
-local Schema = require "kong.db.schema"
-local typedefs = require("kong.db.schema.typedefs")
+local Schema = require "kong.components.datastore.schema"
+local typedefs = require("kong.components.datastore.schema.typedefs")
 local openssl_pkey = require "resty.openssl.pkey"
 local openssl_x509 = require "resty.openssl.x509"
 local ssl_fixtures = require "spec.fixtures.ssl"

@@ -44,7 +44,7 @@ init_by_lua_block {
     require 'luacov'
     jit.off()
 > end -- test and coverage
-    Kong = require 'kong'
+    Kong = require 'kong.components.runtime'
     Kong.init()
 }
 

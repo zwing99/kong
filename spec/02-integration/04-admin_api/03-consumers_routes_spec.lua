@@ -1,7 +1,7 @@
 local helpers = require "spec.helpers"
 local cjson = require "cjson"
 local escape = require("socket.url").escape
-local Errors  = require "kong.db.errors"
+local Errors  = require "kong.components.datastore.errors"
 local utils   = require "kong.tools.utils"
 
 

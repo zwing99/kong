@@ -9,7 +9,7 @@ math.randomseed() -- Generate PRNG seed
 local pl_app = require "pl.lapp"
 local pl_utils = require "pl.utils"
 local pl_tablex = require "pl.tablex"
-local inject_confs = require "kong.cmd.utils.inject_confs"
+local inject_confs = require "kong.components.cli.utils.inject_confs"
 
 local options = [[
  --v              verbose
@@ -69,7 +69,7 @@ elseif not cmds[cmd_name] then
   pl_app.quit("No such command: " .. cmd_name)
 end
 
-local cmd = require("kong.cmd." .. cmd_name)
+local cmd = require("kong.components.cli." .. cmd_name)
 local cmd_lapp = cmd.lapp
 
 if cmd_lapp then
@@ -138,7 +138,7 @@ pcall(require, "luarocks.loader")
 
 package.path = (os.getenv("KONG_LUA_PATH_OVERRIDE") or "") .. "./?.lua;./?/init.lua;" .. package.path
 
-require("kong.cmd.init")("%s", %s)
+require("kong.components.cli.init")("%s", %s)
 ]], cmd_name, args_str)
 
 local resty_cmd = string.format(

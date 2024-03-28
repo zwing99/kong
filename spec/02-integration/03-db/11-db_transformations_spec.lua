@@ -5,7 +5,7 @@ local fmt = string.format
 
 
 for _, strategy in helpers.each_strategy() do
-  describe("kong.db [#" .. strategy .. "]", function()
+  describe("kong.components.datastore [#" .. strategy .. "]", function()
     local _, db
 
     lazy_setup(function()

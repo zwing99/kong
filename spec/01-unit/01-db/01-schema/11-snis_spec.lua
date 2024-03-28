@@ -1,6 +1,6 @@
-local Schema = require "kong.db.schema"
-local snis = require "kong.db.schema.entities.snis"
-local certificates = require "kong.db.schema.entities.certificates"
+local Schema = require "kong.components.datastore.schema"
+local snis = require "kong.components.datastore.schema.entities.snis"
+local certificates = require "kong.components.datastore.schema.entities.certificates"
 local utils = require "kong.tools.utils"
 
 Schema.new(certificates)

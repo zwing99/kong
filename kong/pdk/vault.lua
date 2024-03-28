@@ -11,7 +11,7 @@ local require = require
 
 local concurrency = require "kong.concurrency"
 local constants = require "kong.constants"
-local arguments = require "kong.api.arguments"
+local arguments = require "kong.components.restful.arguments"
 local lrucache = require "resty.lrucache"
 local isempty = require "table.isempty"
 local buffer = require "string.buffer"
@@ -185,7 +185,7 @@ end
 -- @treturn table a new instance of Vault
 local function new(self)
   -- Don't put this onto the top level of the file unless you're prepared for a surprise
-  local Schema = require "kong.db.schema"
+  local Schema = require "kong.components.datastore.schema"
 
   local ROTATION_MUTEX_OPTS = {
     name = "vault-rotation",
@@ -494,7 +494,7 @@ local function new(self)
         return nil, fmt("could not find vault schema (%s): %s", name, def)
       end
 
-      schema = Schema.new(require("kong.db.schema.entities.vaults"))
+      schema = Schema.new(require("kong.components.datastore.schema.entities.vaults"))
 
       local err
       ok, err = schema:new_subschema(name, def)

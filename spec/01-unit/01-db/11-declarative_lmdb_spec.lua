@@ -145,8 +145,8 @@ describe("#off preserve nulls", function()
     buffer      = require "string.buffer"
     kong_global = require "kong.global"
     conf_loader = require "kong.conf_loader"
-    declarative = require "kong.db.declarative"
-    DB = require "kong.db"
+    declarative = require "kong.components.datastore.declarative"
+    DB = require "kong.components.datastore"
   end)
 
   lazy_teardown(function()

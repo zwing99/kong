@@ -1,4 +1,4 @@
-local typedefs = require "kong.db.schema.typedefs"
+local typedefs = require "kong.components.datastore.schema.typedefs"
 
 return {
   name = "azure-functions",

@@ -1,4 +1,4 @@
-local typedefs = require "kong.db.schema.typedefs"
+local typedefs = require "kong.components.datastore.schema.typedefs"
 local validate_header_name = require("kong.tools.utils").validate_header_name
 
 

@@ -1,7 +1,7 @@
-local services = require "kong.db.schema.entities.services"
-local Schema = require "kong.db.schema"
-local certificates = require "kong.db.schema.entities.certificates"
-local Entity       = require "kong.db.schema.entity"
+local services = require "kong.components.datastore.schema.entities.services"
+local Schema = require "kong.components.datastore.schema"
+local certificates = require "kong.components.datastore.schema.entities.certificates"
+local Entity       = require "kong.components.datastore.schema.entity"
 
 local Routes
 
@@ -27,11 +27,11 @@ local function reload_flavor(flavor)
     },
   }
 
-  package.loaded["kong.db.schema.entities.routes"] = nil
-  package.loaded["kong.db.schema.entities.routes_subschemas"] = nil
+  package.loaded["kong.components.datastore.schema.entities.routes"] = nil
+  package.loaded["kong.components.datastore.schema.entities.routes_subschemas"] = nil
 
-  local routes = require "kong.db.schema.entities.routes"
-  local routes_subschemas = require "kong.db.schema.entities.routes_subschemas"
+  local routes = require "kong.components.datastore.schema.entities.routes"
+  local routes_subschemas = require "kong.components.datastore.schema.entities.routes_subschemas"
 
   assert(Schema.new(certificates))
   assert(Schema.new(services))

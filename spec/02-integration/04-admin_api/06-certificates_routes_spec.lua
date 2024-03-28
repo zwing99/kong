@@ -2,7 +2,7 @@ local ssl_fixtures = require "spec.fixtures.ssl"
 local helpers = require "spec.helpers"
 local cjson = require "cjson"
 local utils = require "kong.tools.utils"
-local Errors  = require "kong.db.errors"
+local Errors  = require "kong.components.datastore.errors"
 
 
 local function it_content_types(title, fn)

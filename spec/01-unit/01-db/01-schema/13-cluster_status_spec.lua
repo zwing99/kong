@@ -1,6 +1,6 @@
 require "spec.helpers" -- initializes 'kong' global for plugins
-local Entity = require "kong.db.schema.entity"
-local clustering_data_planes_schema = require "kong.db.schema.entities.clustering_data_planes"
+local Entity = require "kong.components.datastore.schema.entity"
+local clustering_data_planes_schema = require "kong.components.datastore.schema.entities.clustering_data_planes"
 
 describe("plugins", function()
   local ClusterDataPlanes

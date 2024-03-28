@@ -1,5 +1,5 @@
-local Errors = require "kong.db.errors"
-local defaults = require "kong.db.strategies.connector".defaults
+local Errors = require "kong.components.datastore.errors"
+local defaults = require "kong.components.datastore.strategies.connector".defaults
 local utils = require "kong.tools.utils"
 local helpers = require "spec.helpers"
 local cjson = require "cjson"
@@ -25,7 +25,7 @@ end
 
 
 for _, strategy in helpers.each_strategy() do
-  describe("kong.db [#" .. strategy .. "]", function()
+  describe("kong.components.datastore [#" .. strategy .. "]", function()
     local db, bp
 
     lazy_setup(function()

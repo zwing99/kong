@@ -1,5 +1,5 @@
 local conf_loader    = require "kong.conf_loader"
-local prefix_handler = require "kong.cmd.utils.prefix_handler"
+local prefix_handler = require "kong.components.cli.utils.prefix_handler"
 
 local helpers        = require "spec.helpers"
 

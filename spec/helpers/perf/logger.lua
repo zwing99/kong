@@ -1,4 +1,4 @@
-local tty = require("kong.cmd.utils.tty")
+local tty = require("kong.components.cli.utils.tty")
 
 local colors
 

@@ -1,13 +1,13 @@
 require "spec.helpers" -- initializes 'kong' global for plugins
-local Entity = require "kong.db.schema.entity"
-local typedefs = require "kong.db.schema.typedefs"
+local Entity = require "kong.components.datastore.schema.entity"
+local typedefs = require "kong.components.datastore.schema.typedefs"
 local utils = require "kong.tools.utils"
-local routes_definition = require "kong.db.schema.entities.routes"
-local services_definition = require "kong.db.schema.entities.services"
-local consumers_definition = require "kong.db.schema.entities.consumers"
-local plugins_definition = require "kong.db.schema.entities.plugins"
-local dao_plugins = require "kong.db.dao.plugins"
-local certificates_definition = require "kong.db.schema.entities.certificates"
+local routes_definition = require "kong.components.datastore.schema.entities.routes"
+local services_definition = require "kong.components.datastore.schema.entities.services"
+local consumers_definition = require "kong.components.datastore.schema.entities.consumers"
+local plugins_definition = require "kong.components.datastore.schema.entities.plugins"
+local dao_plugins = require "kong.components.datastore.dao.plugins"
+local certificates_definition = require "kong.components.datastore.schema.entities.certificates"
 local constants = require "kong.constants"
 
 describe("plugins", function()

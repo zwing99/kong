@@ -1,4 +1,4 @@
-local Schema = require "kong.db.schema"
+local Schema = require "kong.components.datastore.schema"
 
 -- TODO: enable the descriptions once they are accepted in Schemas
 return Schema.define {

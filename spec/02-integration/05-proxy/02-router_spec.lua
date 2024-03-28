@@ -68,7 +68,7 @@ local function insert_routes(bp, routes)
   end
 
   if bp.done then
-    local declarative = require "kong.db.declarative"
+    local declarative = require "kong.components.datastore.declarative"
 
     local cfg = bp.done()
     local yaml = declarative.to_yaml_string(cfg)
@@ -2468,10 +2468,10 @@ do
 
     package.loaded["spec.helpers"] = nil
     package.loaded["kong.global"] = nil
-    package.loaded["kong.cache"] = nil
-    package.loaded["kong.db"] = nil
-    package.loaded["kong.db.schema.entities.routes"] = nil
-    package.loaded["kong.db.schema.entities.routes_subschemas"] = nil
+    package.loaded["kong.internal.cache"] = nil
+    package.loaded["kong.components.datastore"] = nil
+    package.loaded["kong.components.datastore.schema.entities.routes"] = nil
+    package.loaded["kong.components.datastore.schema.entities.routes_subschemas"] = nil
 
     helpers = require "spec.helpers"
 

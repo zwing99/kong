@@ -1,5 +1,5 @@
-local typedefs = require "kong.db.schema.typedefs"
-local Schema = require "kong.db.schema"
+local typedefs = require "kong.components.datastore.schema.typedefs"
+local Schema = require "kong.components.datastore.schema"
 
 local PROTECTED_TAGS = {
   "error",

@@ -1,5 +1,5 @@
 require("spec.helpers") -- for kong.log
-local declarative = require "kong.db.declarative"
+local declarative = require "kong.components.datastore.declarative"
 local conf_loader = require "kong.conf_loader"
 
 local null = ngx.null

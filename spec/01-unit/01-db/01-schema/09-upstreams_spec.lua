@@ -1,7 +1,7 @@
 local inspect = require "inspect"
-local Schema = require "kong.db.schema"
-local certificates = require "kong.db.schema.entities.certificates"
-local upstreams = require "kong.db.schema.entities.upstreams"
+local Schema = require "kong.components.datastore.schema"
+local certificates = require "kong.components.datastore.schema.entities.certificates"
+local upstreams = require "kong.components.datastore.schema.entities.upstreams"
 
 local function setup_global_env()
   _G.kong = _G.kong or {}

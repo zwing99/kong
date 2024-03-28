@@ -53,7 +53,7 @@ local function setup_it_block()
     },
 
     modules = {
-      { "kong.runloop.balancer", {
+      { "kong.internal.balancer", {
         init = function() end
       }},
 

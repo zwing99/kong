@@ -1,5 +1,5 @@
 local mocker = require "spec.fixtures.mocker"
-local balancer = require "kong.runloop.balancer"
+local balancer = require "kong.internal.balancer"
 local utils = require "kong.tools.utils"
 
 local ws_id = utils.uuid()

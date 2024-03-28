@@ -1,4 +1,4 @@
-local Errors  = require "kong.db.errors"
+local Errors  = require "kong.components.datastore.errors"
 local helpers = require "spec.helpers"
 local utils   = require "kong.tools.utils"
 
@@ -7,7 +7,7 @@ local fmt = string.format
 
 
 for _, strategy in helpers.each_strategy() do
-  describe("kong.db [#" .. strategy .. "]", function()
+  describe("kong.components.datastore [#" .. strategy .. "]", function()
     local _, db
     local unique_foreigns
     local unique_references

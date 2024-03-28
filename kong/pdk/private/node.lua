@@ -1,4 +1,4 @@
-local log = require "kong.cmd.utils.log"
+local log = require "kong.components.cli.utils.log"
 local utils = require "kong.tools.utils"
 local pl_file = require "pl.file"
 local pl_path = require "pl.path"

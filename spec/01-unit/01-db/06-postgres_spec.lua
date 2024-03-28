@@ -3,11 +3,11 @@ local config = {
 }
 
 
-local Schema = require "kong.db.schema"
-local connector = require "kong.db.strategies.postgres.connector".new(config)
+local Schema = require "kong.components.datastore.schema"
+local connector = require "kong.components.datastore.strategies.postgres.connector".new(config)
 
 
-describe("kong.db [#postgres] connector", function()
+describe("kong.components.datastore [#postgres] connector", function()
   describe(":infos()", function()
     it("returns infos db_ver always with two digit groups divided with dot (.)", function()
       local infos = connector.infos{ major_version = 9, major_minor_version = "9.5", config = config }
@@ -126,7 +126,7 @@ describe("kong.db [#postgres] connector", function()
           pg_semaphore_timeout = 1000,
         }
 
-        connector = require "kong.db.strategies.postgres.connector".new(new_config)
+        connector = require "kong.components.datastore.strategies.postgres.connector".new(new_config)
 
         connector.get_stored_connection = function()
           return {
@@ -196,7 +196,7 @@ describe("kong.db [#postgres] connector", function()
           pg_semaphore_timeout = 100,
         }
 
-        connector = require "kong.db.strategies.postgres.connector".new(new_config)
+        connector = require "kong.components.datastore.strategies.postgres.connector".new(new_config)
 
         connector.get_stored_connection = function()
           return {

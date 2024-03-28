@@ -1,6 +1,6 @@
 local helpers = require "spec.helpers"
-local Errors = require "kong.db.errors"
-local defaults = require "kong.db.strategies.connector".defaults
+local Errors = require "kong.components.datastore.errors"
+local defaults = require "kong.components.datastore.strategies.connector".defaults
 
 local fmt      = string.format
 local unindent = helpers.unindent

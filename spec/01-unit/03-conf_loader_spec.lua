@@ -1,6 +1,6 @@
 local kong_meta = require "kong.meta"
 local conf_loader = require "kong.conf_loader"
-local log = require "kong.cmd.utils.log"
+local log = require "kong.components.cli.utils.log"
 local helpers = require "spec.helpers"
 local tablex = require "pl.tablex"
 local pl_path = require "pl.path"

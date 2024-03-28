@@ -7,7 +7,7 @@ local logger = require("spec.helpers.perf.logger")
 local utils = require("spec.helpers.perf.utils")
 local git = require("spec.helpers.perf.git")
 local charts = require("spec.helpers.perf.charts")
-local read_all_env = require("kong.cmd.utils.env").read_all
+local read_all_env = require("kong.components.cli.utils.env").read_all
 
 local my_logger = logger.new_logger("[controller]")
 

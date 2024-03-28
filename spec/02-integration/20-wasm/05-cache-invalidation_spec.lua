@@ -118,7 +118,7 @@ describe("#wasm filter chain cache " .. mode_suffix, function()
 
 
   lazy_setup(function()
-    require("kong.runloop.wasm").enable({
+    require("kong.components.wasm").enable({
       { name = "tests",
         path = FILTER_PATH .. "/tests.wasm",
       },

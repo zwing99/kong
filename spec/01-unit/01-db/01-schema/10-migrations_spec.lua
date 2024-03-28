@@ -1,5 +1,5 @@
-local Migrations = require "kong.db.schema.others.migrations"
-local Schema = require "kong.db.schema"
+local Migrations = require "kong.components.datastore.schema.others.migrations"
+local Schema = require "kong.components.datastore.schema"
 
 
 local MigrationsSchema = Schema.new(Migrations)

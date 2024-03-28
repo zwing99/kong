@@ -1,6 +1,6 @@
-local Schema = require "kong.db.schema"
-local services = require "kong.db.schema.entities.services"
-local certificates = require "kong.db.schema.entities.certificates"
+local Schema = require "kong.components.datastore.schema"
+local services = require "kong.components.datastore.schema.entities.services"
+local certificates = require "kong.components.datastore.schema.entities.certificates"
 
 assert(Schema.new(certificates))
 local Services = assert(Schema.new(services))

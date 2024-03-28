@@ -3,8 +3,8 @@ local meta = require "kong.meta"
 local PDK = require "kong.pdk"
 local process = require "ngx.process"
 local phase_checker = require "kong.pdk.private.phases"
-local kong_cache = require "kong.cache"
-local kong_cluster_events = require "kong.cluster_events"
+local kong_cache = require "kong.internal.cache"
+local kong_cluster_events = require "kong.internal.cluster_events"
 local private_node = require "kong.pdk.private.node"
 
 local ngx = ngx
@@ -291,7 +291,7 @@ end
 
 
 function _GLOBAL.init_timing()
-  return require("kong.timing")
+  return require("kong.components.timing")
 end
 
 

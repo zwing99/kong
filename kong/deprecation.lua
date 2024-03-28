@@ -7,7 +7,7 @@ local type = type
 
 
 local function init_cli()
-  local log = require "kong.cmd.utils.log"
+  local log = require "kong.components.cli.utils.log"
   pl_utils.set_deprecation_func(function(msg, trace)
     if trace then
       log.warn(msg, " ", trace)

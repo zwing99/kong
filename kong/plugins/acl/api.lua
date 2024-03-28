@@ -1,4 +1,4 @@
-local endpoints   = require "kong.api.endpoints"
+local endpoints   = require "kong.components.restful.endpoints"
 local utils       = require "kong.tools.utils"
 
 

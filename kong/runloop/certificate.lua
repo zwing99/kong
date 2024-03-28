@@ -3,7 +3,7 @@ local pl_utils = require "pl.utils"
 local mlcache = require "kong.resty.mlcache"
 local new_tab = require "table.new"
 local constants = require "kong.constants"
-local plugin_servers = require "kong.runloop.plugin_servers"
+local plugin_servers = require "kong.internal.plugin_servers"
 local openssl_x509_store = require "resty.openssl.x509.store"
 local openssl_x509 = require "resty.openssl.x509"
 
@@ -385,7 +385,7 @@ end
 local get_ca_certificate_reference_entities
 do
   local function is_entity_referencing_ca_certificates(name)
-    local entity_schema = require("kong.db.schema.entities." .. name)
+    local entity_schema = require("kong.components.datastore.schema.entities." .. name)
     for _, field in ipairs(entity_schema.fields) do
       if field.ca_certificates then
         return true

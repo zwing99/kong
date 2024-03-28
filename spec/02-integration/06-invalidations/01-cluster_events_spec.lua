@@ -2,7 +2,7 @@ _G.ngx.config.debug = true
 
 
 local helpers             = require "spec.helpers"
-local kong_cluster_events = require "kong.cluster_events"
+local kong_cluster_events = require "kong.internal.cluster_events"
 
 
 for _, strategy in helpers.each_strategy() do
@@ -39,19 +39,19 @@ for _, strategy in helpers.each_strategy() do
       it("instantiates only once (singleton)", function()
         finally(function()
           _G.ngx.config.debug = true
-          package.loaded["kong.cluster_events"] = nil
-          kong_cluster_events = require "kong.cluster_events"
+          package.loaded["kong.internal.cluster_events"] = nil
+          kong_cluster_events = require "kong.internal.cluster_events"
         end)
 
         _G.ngx.config.debug = false
-        package.loaded["kong.cluster_events"] = nil
-        kong_cluster_events = require "kong.cluster_events"
+        package.loaded["kong.internal.cluster_events"] = nil
+        kong_cluster_events = require "kong.internal.cluster_events"
 
         assert(kong_cluster_events.new { db = db })
 
         assert.has_error(function()
           assert(kong_cluster_events.new { db = db })
-        end, "kong.cluster_events was already instantiated", nil, true)
+        end, "kong.internal.cluster_events was already instantiated", nil, true)
       end)
 
       it("generates an identical node_id for all instances on a node", function()

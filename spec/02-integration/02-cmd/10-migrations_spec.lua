@@ -1,6 +1,6 @@
 local helpers = require "spec.helpers"
 local utils = require "kong.tools.utils"
-local DB = require "kong.db.init"
+local DB = require "kong.components.datastore.init"
 local tb_clone = require "table.clone"
 local shell = require "resty.shell"
 

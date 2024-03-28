@@ -7,7 +7,7 @@
 -- @module kong.service
 
 
-local balancer = require "kong.runloop.balancer"
+local balancer = require "kong.internal.balancer"
 local phase_checker = require "kong.pdk.private.phases"
 
 

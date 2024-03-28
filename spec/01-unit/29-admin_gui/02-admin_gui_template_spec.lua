@@ -1,10 +1,10 @@
 local match          = require "luassert.match"
 local pl_path        = require "pl.path"
 
-local admin_gui      = require "kong.admin_gui"
+local admin_gui      = require "kong.components.gui"
 local conf_loader    = require "kong.conf_loader"
-local log            = require "kong.cmd.utils.log"
-local prefix_handler = require "kong.cmd.utils.prefix_handler"
+local log            = require "kong.components.cli.utils.log"
+local prefix_handler = require "kong.components.cli.utils.prefix_handler"
 
 local helpers        = require "spec.helpers"
 

@@ -1,5 +1,5 @@
-local arguments    = require "kong.api.arguments"
-local Schema       = require "kong.db.schema"
+local arguments    = require "kong.components.restful.arguments"
+local Schema       = require "kong.components.datastore.schema"
 local helpers      = require "spec.helpers"
 
 

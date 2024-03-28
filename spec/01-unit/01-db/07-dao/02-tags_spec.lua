@@ -1,14 +1,14 @@
-local Tags = require("kong.db.dao.tags")
-local Dao = require("kong.db.dao")
-local Entity = require("kong.db.schema.entity")
-local Errors = require("kong.db.errors")
+local Tags = require("kong.components.datastore.dao.tags")
+local Dao = require("kong.components.datastore.dao")
+local Entity = require("kong.components.datastore.schema.entity")
+local Errors = require("kong.components.datastore.errors")
 
 
-describe("kong.db.dao.tags", function()
+describe("kong.components.datastore.dao.tags", function()
   local self
 
   lazy_setup(function()
-    local schema = assert(Entity.new(require("kong.db.schema.entities.tags")))
+    local schema = assert(Entity.new(require("kong.components.datastore.schema.entities.tags")))
 
     self = {
       schema = schema,
@@ -29,13 +29,13 @@ describe("kong.db.dao.tags", function()
 end)
 
 
-describe("kong.db.dao with foreign_key", function()
+describe("kong.components.datastore.dao with foreign_key", function()
   local dao, strategy
 
   lazy_setup(function()
-    assert(Entity.new(require("kong.db.schema.entities.certificates")))
-    assert(Entity.new(require("kong.db.schema.entities.upstreams")))
-    local schema = assert(Entity.new(require("kong.db.schema.entities.targets")))
+    assert(Entity.new(require("kong.components.datastore.schema.entities.certificates")))
+    assert(Entity.new(require("kong.components.datastore.schema.entities.upstreams")))
+    local schema = assert(Entity.new(require("kong.components.datastore.schema.entities.targets")))
 
     strategy = setmetatable({}, {__index = function() return function() end end})
 

@@ -4,7 +4,7 @@ local assert = require "luassert"
 local busted = require "busted"
 
 local conf_loader = require "kong.conf_loader"
-local DB = require "kong.db"
+local DB = require "kong.components.datastore"
 local helpers = require "spec.helpers"
 
 local conf = conf_loader()

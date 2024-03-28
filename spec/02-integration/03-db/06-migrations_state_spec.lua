@@ -1,4 +1,4 @@
-local State = require "kong.db.migrations.state"
+local State = require "kong.components.datastore.migrations.state"
 local helpers = require "spec.helpers"
 
 for _, strategy in helpers.each_strategy() do

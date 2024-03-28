@@ -1,4 +1,4 @@
-local operations = require "kong.db.migrations.operations.212_to_213"
+local operations = require "kong.components.datastore.migrations.operations.212_to_213"
 
 
 local plugin_entities = {

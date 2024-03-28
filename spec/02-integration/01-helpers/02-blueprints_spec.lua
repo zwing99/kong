@@ -1,4 +1,4 @@
-local DB = require "kong.db"
+local DB = require "kong.components.datastore"
 local helpers = require "spec.helpers"
 local Blueprints = require "spec.fixtures.blueprints"
 

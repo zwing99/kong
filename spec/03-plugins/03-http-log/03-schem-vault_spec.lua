@@ -1,6 +1,6 @@
 local helpers = require "spec.helpers"
-local Entity = require "kong.db.schema.entity"
-local plugins_schema_def = require "kong.db.schema.entities.plugins"
+local Entity = require "kong.components.datastore.schema.entity"
+local plugins_schema_def = require "kong.components.datastore.schema.entities.plugins"
 local conf_loader = require "kong.conf_loader"
 
 local PLUGIN_NAME = "http-log"

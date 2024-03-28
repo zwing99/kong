@@ -1,6 +1,6 @@
 local cjson   = require "cjson"
 local helpers = require "spec.helpers"
-local Errors  = require "kong.db.errors"
+local Errors  = require "kong.components.datastore.errors"
 
 
 for _, strategy in helpers.each_strategy() do

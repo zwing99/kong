@@ -1,5 +1,5 @@
-local workspaces = require "kong.db.schema.entities.workspaces"
-local Entity       = require "kong.db.schema.entity"
+local workspaces = require "kong.components.datastore.schema.entities.workspaces"
+local Entity       = require "kong.components.datastore.schema.entity"
 
 local Workspaces = assert(Entity.new(workspaces))
 

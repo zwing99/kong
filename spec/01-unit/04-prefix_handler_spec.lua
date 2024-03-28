@@ -1,6 +1,6 @@
 local helpers = require "spec.helpers"
 local conf_loader = require "kong.conf_loader"
-local prefix_handler = require "kong.cmd.utils.prefix_handler"
+local prefix_handler = require "kong.components.cli.utils.prefix_handler"
 local ffi = require "ffi"
 local tablex = require "pl.tablex"
 local ssl_fixtures = require "spec.fixtures.ssl"

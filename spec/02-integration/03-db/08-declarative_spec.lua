@@ -1,4 +1,4 @@
-local declarative = require "kong.db.declarative"
+local declarative = require "kong.components.datastore.declarative"
 local ssl_fixtures = require "spec.fixtures.ssl"
 local helpers = require "spec.helpers"
 local lyaml = require "lyaml"

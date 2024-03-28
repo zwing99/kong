@@ -1,5 +1,5 @@
-local Schema = require "kong.db.schema"
-local ts = require "kong.db.schema.topological_sort"
+local Schema = require "kong.components.datastore.schema"
+local ts = require "kong.components.datastore.schema.topological_sort"
 
 describe("schemas_topological_sort", function()
 

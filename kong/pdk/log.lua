@@ -38,7 +38,7 @@ local kong = kong
 local check_phase = phase_checker.check
 local split = utils.split
 local byte = string.byte
-local request_id_get = require "kong.tracing.request_id".get
+local request_id_get = require "kong.components.tracing.request_id".get
 
 
 local _PREFIX = "[kong] "

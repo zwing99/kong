@@ -1,4 +1,4 @@
-local typedefs = require "kong.db.schema.typedefs"
+local typedefs = require "kong.components.datastore.schema.typedefs"
 
 
 -- TODO: At the moment this tests the happy case. Perhaps it could be extended to work

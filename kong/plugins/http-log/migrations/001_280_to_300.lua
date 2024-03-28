@@ -1,4 +1,4 @@
-local operations = require "kong.db.migrations.operations.280_to_300"
+local operations = require "kong.components.datastore.migrations.operations.280_to_300"
 
 
 local function ws_migration_teardown(ops)

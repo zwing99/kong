@@ -549,7 +549,7 @@ describe("kong start/stop #" .. strategy, function()
     end)
 
     it("should not start Kong if already running in prefix", function()
-      local kill = require "kong.cmd.utils.kill"
+      local kill = require "kong.components.cli.utils.kill"
 
       assert(helpers.kong_exec("start --prefix " .. PREFIX, {
         pg_database = TEST_CONF.pg_database,
@@ -593,7 +593,7 @@ describe("kong start/stop #" .. strategy, function()
 
     it("ensures the required shared dictionaries are defined", function()
       local tmp_nginx_config = "spec/fixtures/nginx_conf.tmp"
-      local prefix_handler = require "kong.cmd.utils.prefix_handler"
+      local prefix_handler = require "kong.components.cli.utils.prefix_handler"
       local conf_loader = require "kong.conf_loader"
 
       local nginx_conf = assert(conf_loader(helpers.test_conf_path, {
@@ -1189,7 +1189,7 @@ describe("kong start/stop #" .. strategy, function()
         admin_listen  = "127.0.0.1:8001",
       }))
 
-      local nginx, err = require("kong.cmd.utils.nginx_signals").find_nginx_bin()
+      local nginx, err = require("kong.components.cli.utils.nginx_signals").find_nginx_bin()
       assert.is_string(nginx, err)
 
       local started

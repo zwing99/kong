@@ -1,4 +1,4 @@
-local llm_class = require("kong.llm")
+local llm_class = require("kong.internal.llm")
 local helpers = require "spec.helpers"
 local cjson = require "cjson"
 local http_mock = require "spec.helpers.http_mock"
