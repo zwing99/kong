@@ -1,4 +1,4 @@
-local workspaces = require "kong.workspaces"
+local workspaces = require "kong.components.workspaces"
 local constants = require "kong.constants"
 local utils = require "kong.tools.utils"
 local tablepool = require "tablepool"

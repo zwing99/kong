@@ -1,6 +1,4 @@
 local constants = require "kong.constants"
-local kong_meta = require "kong.meta"
-
 
 local kong = kong
 local type = type
@@ -18,7 +16,7 @@ local HEADERS_ANONYMOUS             = constants.HEADERS.ANONYMOUS
 
 
 local KeyAuthHandler = {
-  VERSION = kong_meta.version,
+  VERSION = require "kong.constants".VERSION,
   PRIORITY = 1250,
 }
 

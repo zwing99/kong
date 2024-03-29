@@ -72,7 +72,7 @@ end
 
 pcall(require, "luarocks.loader")
 
-require("kong.globalpatches")({
+require("kong.internal.globals.patches")({
   cli = true,
   rbusted = true
 })

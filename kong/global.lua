@@ -1,5 +1,3 @@
--- TODO: get rid of 'kong.meta'; this module is king
-local meta = require "kong.meta"
 local PDK = require "kong.pdk"
 local process = require "ngx.process"
 local phase_checker = require "kong.pdk.private.phases"
@@ -13,11 +11,8 @@ local error = error
 local setmetatable = setmetatable
 
 
-local KONG_VERSION = tostring(meta._VERSION)
-local KONG_VERSION_NUM = tonumber(string.format("%d%.2d%.2d",
-                                  meta._VERSION_TABLE.major * 100,
-                                  meta._VERSION_TABLE.minor * 10,
-                                  meta._VERSION_TABLE.patch))
+local KONG_VERSION = "3.3.3-broken-on-purpose"
+local KONG_VERSION_NUM = tonumber("300601")
 
 local LOCK_OPTS = {
   exptime = 10,

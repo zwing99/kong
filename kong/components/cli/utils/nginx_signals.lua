@@ -1,7 +1,7 @@
 local ffi = require "ffi"
 local log = require "kong.components.cli.utils.log"
 local kill = require "kong.components.cli.utils.kill"
-local meta = require "kong.meta"
+local constants = require "kong.constants"
 local pl_path = require "pl.path"
 local version = require "version"
 local pl_utils = require "pl.utils"
@@ -33,7 +33,7 @@ local nginx_search_paths = {
 
 
 local nginx_version_pattern = "^nginx.-openresty.-([%d%.]+)"
-local nginx_compatible = version.set(unpack(meta._DEPENDENCIES.nginx))
+local nginx_compatible = version.set(unpack(require "kong.config".DEPENDENCIES.nginx))
 
 
 local function is_openresty(bin_path)

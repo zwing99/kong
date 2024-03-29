@@ -12,7 +12,6 @@ return function(options)
 
 
   options = options or {}
-  local meta = require "kong.meta"
   local constants = require "kong.constants"
 
 
@@ -36,8 +35,8 @@ return function(options)
 
 
   _G._KONG = {
-    _NAME = meta._NAME,
-    _VERSION = meta._VERSION
+    _NAME = constants.NAME,
+    _VERSION = require "kong.constants".VERSION
   }
 
   if options.cli then

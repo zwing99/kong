@@ -1,5 +1,6 @@
-local kong_global = require "kong.global"
 local conf_loader = require "kong.internal.conf_loader"
+local globals = require "kong.internal.globals"
+local PDK = require "kong.pdk"
 local pl_path = require "pl.path"
 local log = require "kong.components.cli.utils.log"
 
@@ -29,8 +30,11 @@ local function init_db(args)
 
   package.path = conf.lua_package_path .. ";" .. package.path
 
-  _G.kong = kong_global.new()
-  kong_global.init_pdk(_G.kong, conf)
+  globals.create_G_kong()
+
+  _G.kong.configuration = conf
+
+  PDK.new(_G.kong)
 
   local db = assert(DB.new(conf))
   assert(db:init_connector())

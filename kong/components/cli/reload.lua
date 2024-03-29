@@ -1,7 +1,8 @@
 local prefix_handler = require "kong.components.cli.utils.prefix_handler"
 local nginx_signals = require "kong.components.cli.utils.nginx_signals"
 local conf_loader = require "kong.internal.conf_loader"
-local kong_global = require "kong.global"
+local globals = require "kong.internal.globals"
+local PDK = require "kong.pdk"
 local pl_path = require "pl.path"
 local pl_file = require "pl.file"
 local log = require "kong.components.cli.utils.log"
@@ -39,8 +40,11 @@ local function execute(args)
   assert(prefix_handler.prepare_prefix(conf, args.nginx_conf, nil, true,
          args.nginx_conf_flags))
 
-  _G.kong = kong_global.new()
-  kong_global.init_pdk(_G.kong, conf)
+  globals.create_G_kong()
+
+  _G.kong.configuration = conf
+
+  PDK.new(_G.kong)
 
   local db = assert(DB.new(conf))
   assert(db:init_connector())

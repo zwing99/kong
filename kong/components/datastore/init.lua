@@ -7,7 +7,7 @@ local Strategies   = require "kong.components.datastore.strategies"
 local MetaSchema   = require "kong.components.datastore.schema.metaschema"
 local constants    = require "kong.constants"
 local log          = require "kong.components.cli.utils.log"
-local workspaces   = require "kong.workspaces"
+local workspaces   = require "kong.components.workspaces"
 local knode        = kong and kong.node
                      or require "kong.pdk.node".new()
 

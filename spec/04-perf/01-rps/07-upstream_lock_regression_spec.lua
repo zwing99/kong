@@ -2,7 +2,7 @@ local shell = require "resty.shell"
 local perf = require "spec.helpers.perf"
 local split = require "pl.stringx".split
 local utils = require "spec.helpers.perf.utils"
-local workspaces = require "kong.workspaces"
+local workspaces = require "kong.components.workspaces"
 local charts = require "spec.helpers.perf.charts"
 local fmt = string.format
 

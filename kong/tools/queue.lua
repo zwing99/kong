@@ -56,7 +56,7 @@
 --   previous delay is doubled to yield an exponential back-off strategy - The first retry will be made quickly,
 --   and each subsequent retry will be delayed longer.
 
-local workspaces = require("kong.workspaces")
+local workspaces = require("kong.components.workspaces")
 local semaphore = require("ngx.semaphore")
 local table_new = require("table.new")
 

@@ -1,7 +1,5 @@
-local kong_meta = require "kong.meta"
-
 local ReconfigurationCompletionHandler = {
-  VERSION = kong_meta.version,
+  VERSION = require "kong.constants".VERSION,
   PRIORITY = 2000000,
 }
 

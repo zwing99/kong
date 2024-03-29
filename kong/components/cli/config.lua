@@ -2,7 +2,8 @@ local DB = require "kong.components.datastore"
 local log = require "kong.components.cli.utils.log"
 local pl_path = require "pl.path"
 local pl_file = require "pl.file"
-local kong_global = require "kong.global"
+local globals = require "kong.internal.globals"
+local PDK = require "kong.pdk"
 local declarative = require "kong.components.datastore.declarative"
 local conf_loader = require "kong.internal.conf_loader"
 local kong_yml = require "kong.templates.kong_yml"
@@ -72,8 +73,11 @@ local function execute(args)
 
   package.path = conf.lua_package_path .. ";" .. package.path
 
-  _G.kong = kong_global.new()
-  kong_global.init_pdk(_G.kong, conf)
+  globals.create_G_kong()
+
+  _G.kong.configuration = conf
+
+  PDK.new(_G.kong)
 
   local dc, err = declarative.new_config(conf, true)
   if not dc then

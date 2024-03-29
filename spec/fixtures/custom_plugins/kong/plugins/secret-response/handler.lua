@@ -1,10 +1,9 @@
-local kong_meta = require "kong.meta"
 local decode = require "cjson".decode
 
 
 local SecretResponse = {
   PRIORITY = 529,
-  VERSION = kong_meta.version,
+  VERSION = require "kong.constants".VERSION,
 }
 
 

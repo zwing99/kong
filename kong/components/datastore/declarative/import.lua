@@ -1,7 +1,7 @@
 local lmdb = require("resty.lmdb")
 local txn = require("resty.lmdb.transaction")
 local constants = require("kong.constants")
-local workspaces = require("kong.workspaces")
+local workspaces = require("kong.components.workspaces")
 local utils = require("kong.tools.utils")
 local declarative_config = require("kong.components.datastore.schema.others.declarative_config")
 

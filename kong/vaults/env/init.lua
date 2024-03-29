@@ -1,4 +1,3 @@
-local kong_meta = require "kong.meta"
 local ffi = require "ffi"
 
 
@@ -55,7 +54,7 @@ end
 
 
 return {
-  VERSION = kong_meta.version,
+  VERSION = require "kong.constants".VERSION,
   init = init,
   get = get,
 }

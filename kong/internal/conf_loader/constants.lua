@@ -1,4 +1,3 @@
-local kong_meta = require "kong.meta"
 local constants = require "kong.constants"
 
 
@@ -614,9 +613,7 @@ local _NOP_TOSTRING_MT = {
 
 
 -- using kong version, "major.minor"
-local LMDB_VALIDATION_TAG = string.format("%d.%d",
-                                          kong_meta._VERSION_TABLE.major,
-                                          kong_meta._VERSION_TABLE.minor)
+local LMDB_VALIDATION_TAG = require "kong.constants".LMDB_VALIDATION_TAG
 
 
 return {

@@ -1,4 +1,4 @@
-require("kong.globalpatches")({cli = true})
+require("kong.internal.globals.patches")({cli = true})
 
 math.randomseed() -- Generate PRNG seed
 
@@ -23,7 +23,7 @@ return function(cmd_name, args)
     log.set_lvl(log.levels.debug)
   end
 
-  log.verbose("Kong: %s", _KONG._VERSION)
+  log.verbose("Kong: %s", require "kong.constants".VERSION)
   log.debug("ngx_lua: %s", ngx.config.ngx_lua_version)
   log.debug("nginx: %s", ngx.config.nginx_version)
   log.debug("Lua: %s", jit and jit.version or _VERSION)

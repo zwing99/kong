@@ -2,7 +2,7 @@ local shell = require "resty.shell"
 local perf = require("spec.helpers.perf")
 local split = require("pl.stringx").split
 local utils = require("spec.helpers.perf.utils")
-local workspaces = require "kong.workspaces"
+local workspaces = require "kong.components.workspaces"
 local fmt = string.format
 
 perf.setenv("PERF_TEST_SEPERATE_DB_NODE", "1")

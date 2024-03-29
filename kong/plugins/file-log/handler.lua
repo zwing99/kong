@@ -1,7 +1,5 @@
 -- Copyright (C) Kong Inc.
 require "kong.tools.utils" -- ffi.cdefs
-local kong_meta = require "kong.meta"
-
 
 local ffi = require "ffi"
 local cjson = require "cjson"
@@ -66,7 +64,7 @@ end
 
 local FileLogHandler = {
   PRIORITY = 9,
-  VERSION = kong_meta.version,
+  VERSION = require "kong.constants".VERSION,
 }
 
 

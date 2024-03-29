@@ -1,7 +1,6 @@
 local require     = require
 local cache_key   = require "kong.plugins.proxy-cache.cache_key"
 local utils       = require "kong.tools.utils"
-local kong_meta   = require "kong.meta"
 local mime_type   = require "kong.tools.mime_type"
 local nkeys       = require "table.nkeys"
 
@@ -245,7 +244,7 @@ end
 
 
 local ProxyCacheHandler = {
-  VERSION = kong_meta.version,
+  VERSION = require "kong.constants".VERSION,
   PRIORITY = 100,
 }
 

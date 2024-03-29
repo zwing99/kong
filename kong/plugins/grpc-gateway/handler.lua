@@ -1,8 +1,6 @@
 -- Copyright (c) Kong Inc. 2020
 
 local deco = require "kong.plugins.grpc-gateway.deco"
-local kong_meta = require "kong.meta"
-
 local ngx = ngx
 local kong = kong
 
@@ -21,7 +19,7 @@ local kong_service_request_set_raw_body = kong.service.request.set_raw_body
 
 local grpc_gateway = {
   PRIORITY = 998,
-  VERSION = kong_meta.version,
+  VERSION = require "kong.constants".VERSION,
 }
 
 

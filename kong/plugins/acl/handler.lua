@@ -1,8 +1,6 @@
 local constants = require "kong.constants"
 local tablex = require "pl.tablex"
 local groups = require "kong.plugins.acl.groups"
-local kong_meta = require "kong.meta"
-
 
 local setmetatable = setmetatable
 local concat = table.concat
@@ -41,7 +39,7 @@ local ACLHandler = {}
 
 
 ACLHandler.PRIORITY = 950
-ACLHandler.VERSION = kong_meta.version
+ACLHandler.VERSION = require "kong.constants".VERSION
 
 
 function ACLHandler:access(conf)

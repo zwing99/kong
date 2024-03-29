@@ -9,11 +9,10 @@ local buffer = require "string.buffer"
 local lrucache = require "resty.lrucache"
 
 local kong = kong
-local meta = require "kong.meta"
 local constants = require "kong.constants"
 local aws_config = require "resty.aws.config" -- reads environment variables, thus specified here
 local VIA_HEADER = constants.HEADERS.VIA
-local VIA_HEADER_VALUE = meta._NAME .. "/" .. meta._VERSION
+local VIA_HEADER_VALUE = constants.NAME .. "/" .. constants.VERSION
 
 local request_util = require "kong.plugins.aws-lambda.request-util"
 local build_request_payload = request_util.build_request_payload
@@ -66,7 +65,7 @@ end
 
 local AWSLambdaHandler = {
   PRIORITY = 750,
-  VERSION = meta.version
+  VERSION = require "kong.constants".VERSION
 }
 
 

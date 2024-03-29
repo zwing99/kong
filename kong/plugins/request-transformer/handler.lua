@@ -1,9 +1,7 @@
 local access = require "kong.plugins.request-transformer.access"
-local kong_meta = require "kong.meta"
-
 
 local RequestTransformerHandler = {
-  VERSION = kong_meta.version,
+  VERSION = require "kong.constants".VERSION,
   PRIORITY = 801,
 }
 

@@ -1,6 +1,5 @@
 -- Kong runloop
 
-local meta         = require "kong.meta"
 local utils        = require "kong.tools.utils"
 local Router       = require "kong.internal.router"
 local balancer     = require "kong.internal.balancer"
@@ -104,7 +103,7 @@ local WASM_STATE_SYNC_OPTS
 local RECONFIGURE_OPTS
 local GLOBAL_QUERY_OPTS = { workspace = ngx.null, show_ws_id = true }
 
-local SERVER_HEADER = meta._SERVER_TOKENS
+local SERVER_HEADER = constants.SERVER_TOKENS
 
 
 local STREAM_TLS_TERMINATE_SOCK

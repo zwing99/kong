@@ -1,7 +1,5 @@
 local Queue = require "kong.tools.queue"
 local statsd_logger = require "kong.plugins.datadog.statsd_logger"
-local kong_meta = require "kong.meta"
-
 
 local replace_dashes = require("kong.tools.string").replace_dashes
 
@@ -102,7 +100,7 @@ end
 
 local DatadogHandler = {
   PRIORITY = 10,
-  VERSION = kong_meta.version,
+  VERSION = require "kong.constants".VERSION,
 }
 
 function DatadogHandler:log(conf)

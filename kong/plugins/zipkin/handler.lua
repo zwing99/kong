@@ -3,7 +3,6 @@ local new_span = require "kong.plugins.zipkin.span".new
 local utils = require "kong.tools.utils"
 local propagation = require "kong.components.tracing.propagation"
 local request_tags = require "kong.plugins.zipkin.request_tags"
-local kong_meta = require "kong.meta"
 local ngx_re = require "ngx.re"
 
 
@@ -16,7 +15,7 @@ local rand_bytes = utils.get_rand_bytes
 local to_hex = require "resty.string".to_hex
 
 local ZipkinLogHandler = {
-  VERSION = kong_meta.version,
+  VERSION = require "kong.constants".VERSION,
   -- We want to run first so that timestamps taken are at start of the phase
   -- also so that other plugins might be able to use our structures
   PRIORITY = 100000,

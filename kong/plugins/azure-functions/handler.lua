@@ -1,7 +1,5 @@
 local constants     = require "kong.constants"
-local meta          = require "kong.meta"
 local http          = require "resty.http"
-local kong_meta     = require "kong.meta"
 
 
 local kong          = kong
@@ -9,7 +7,7 @@ local fmt           = string.format
 local byte          = string.byte
 local match         = string.match
 local var           = ngx.var
-local server_header = meta._SERVER_TOKENS
+local server_header = constants.SERVER_TOKENS
 
 
 local SLASH = byte("/")
@@ -18,7 +16,7 @@ local STRIP_SLASHES_PATTERN = "^/*(.-)/*$"
 
 local azure = {
   PRIORITY = 749,
-  VERSION = kong_meta.version,
+  VERSION = require "kong.constants".VERSION,
 }
 
 

@@ -58,7 +58,7 @@ do
 end
 
 
-require("kong.globalpatches")()
+require("kong.internal.globals.patches")()
 
 
 local kong_global = require "kong.global"
@@ -70,7 +70,6 @@ _G.kong = kong_global.new() -- no versioned PDK for plugins for now
 
 local DB = require "kong.components.datastore"
 local dns = require "kong.tools.dns"
-local meta = require "kong.meta"
 local lapis = require "lapis"
 local runloop = require "kong.runloop.handler"
 local stream_api = require "kong.tools.stream_api"
@@ -81,7 +80,7 @@ local certificate = require "kong.runloop.certificate"
 local concurrency = require "kong.concurrency"
 local cache_warmup = require "kong.internal.cache.warmup"
 local balancer = require "kong.internal.balancer"
-local kong_error_handlers = require "kong.internal.restful.error_handlers"
+local kong_error_handlers = require "kong.components.restful.error_handlers"
 local plugin_servers = require "kong.internal.plugin_servers"
 local lmdb_txn = require "resty.lmdb.transaction"
 local instrumentation = require "kong.components.tracing.instrumentation"
@@ -1880,7 +1879,7 @@ function Kong.admin_header_filter()
   end
 
   if enabled_headers[headers.SERVER] then
-    header[headers.SERVER] = meta._SERVER_TOKENS
+    header[headers.SERVER] = constants.SERVER_TOKENS
 
   else
     header[headers.SERVER] = nil

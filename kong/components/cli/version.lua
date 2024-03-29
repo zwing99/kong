@@ -1,4 +1,4 @@
-local meta = require "kong.meta"
+local VERSION = require "kong.constants".VERSION
 
 local lapp = [[
 Usage: kong version [OPTIONS]
@@ -19,13 +19,13 @@ Lua: %s]]
 local function execute(args)
   if args.all then
     print(string.format(str,
-      meta._VERSION,
+    VERSION,
       ngx.config.ngx_lua_version,
       ngx.config.nginx_version,
       jit and jit.version or _VERSION
     ))
   else
-    print(meta._VERSION)
+    print(VERSION)
   end
 end
 

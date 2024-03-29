@@ -1,6 +1,5 @@
 local cjson = require("cjson.safe")
 local constants = require("kong.constants")
-local meta = require("kong.meta")
 local version = require("kong.components.clustering.compat.version")
 local utils = require("kong.tools.utils")
 
@@ -27,7 +26,7 @@ local _log_prefix = "[clustering] "
 local REMOVED_FIELDS = require("kong.components.clustering.compat.removed_fields")
 local COMPATIBILITY_CHECKERS = require("kong.components.clustering.compat.checkers")
 local CLUSTERING_SYNC_STATUS = constants.CLUSTERING_SYNC_STATUS
-local KONG_VERSION = meta.version
+local KONG_VERSION = constants.VERSION
 
 local EMPTY = {}
 

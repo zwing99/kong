@@ -74,14 +74,12 @@ local report_counter = nil
 do
   -- initialize immutable buffer data (the same for each report)
 
-  local meta = require "kong.meta"
-
   local system_infos = system.get_system_infos()
 
   system_infos.hostname = system_infos.hostname or knode.get_hostname()
 
   -- <14>: syslog facility code 'log alert'
-  _buffer[#_buffer + 1] = "<14>version=" .. meta._VERSION
+  _buffer[#_buffer + 1] = "<14>version=" .. constants.VERSION
 
   for k, v in pairs(system_infos) do
     _buffer[#_buffer + 1] = k .. "=" .. v

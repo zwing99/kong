@@ -6,7 +6,7 @@
 ---
 ---
 ---
-local workspaces = require "kong.workspaces"
+local workspaces = require "kong.components.workspaces"
 local constants  = require "kong.constants"
 local balancers
 local healthcheckers

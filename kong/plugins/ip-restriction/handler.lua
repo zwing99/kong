@@ -1,7 +1,5 @@
 local lrucache = require "resty.lrucache"
 local ipmatcher = require "resty.ipmatcher"
-local kong_meta = require "kong.meta"
-
 
 local error = error
 local kong = kong
@@ -16,7 +14,7 @@ local cache = lrucache.new(IPMATCHER_COUNT)
 
 local IpRestrictionHandler = {
   PRIORITY = 990,
-  VERSION = kong_meta.version,
+  VERSION = require "kong.constants".VERSION,
 }
 
 

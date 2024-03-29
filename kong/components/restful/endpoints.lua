@@ -1,7 +1,7 @@
 local Errors       = require "kong.components.datastore.errors"
 local utils        = require "kong.tools.utils"
 local arguments    = require "kong.components.restful.arguments"
-local workspaces   = require "kong.workspaces"
+local workspaces   = require "kong.components.workspaces"
 local app_helpers  = require "lapis.application"
 
 

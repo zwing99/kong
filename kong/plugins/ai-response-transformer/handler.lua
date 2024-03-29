@@ -1,7 +1,6 @@
 local _M = {}
 
 -- imports
-local kong_meta     = require "kong.meta"
 local http          = require("resty.http")
 local fmt           = string.format
 local kong_utils    = require("kong.tools.gzip")
@@ -9,7 +8,7 @@ local llm           = require("kong.internal.llm")
 --
 
 _M.PRIORITY = 769
-_M.VERSION = kong_meta.version
+_M.VERSION = require "kong.constants".VERSION
 
 local function bad_request(msg)
   kong.log.info(msg)

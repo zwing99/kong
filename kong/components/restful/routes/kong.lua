@@ -6,16 +6,16 @@ local process = require "ngx.process"
 local wasm = require "kong.components.wasm"
 
 local kong = kong
-local meta = require "kong.meta"
 local knode  = (kong and kong.node) and kong.node or
                require "kong.pdk.node".new()
 local errors = Errors.new()
 local get_sys_filter_level = require "ngx.errlog".get_sys_filter_level
-local LOG_LEVELS = require "kong.constants".LOG_LEVELS
+local constants = require "kong.constants"
+local LOG_LEVELS = constants.LOG_LEVELS
 
 
-local tagline = "Welcome to " .. _KONG._NAME
-local version = meta.version
+local tagline = "Welcome to " .. constants.NAME
+local version = kong.version
 local lua_version = jit and jit.version or _VERSION
 
 
@@ -130,7 +130,7 @@ return {
       return kong.response.exit(200, {
         tagline = tagline,
         version = version,
-        edition = meta._VERSION:match("enterprise") and "enterprise" or "community",
+        edition = kong.version:match("enterprise") and "enterprise" or "community",
         hostname = knode.get_hostname(),
         node_id = node_id,
         timers = {

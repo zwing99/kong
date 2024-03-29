@@ -1,6 +1,10 @@
 return {
-    "cli",
+    -- "cli",
     "datastore",
-    "restful",
-    "proxy",
+    "events",
+    "cache",
+    "plugins_iterator",
+    "workspaces",
+    -- "restful",
+    -- "proxy",
 }

@@ -1,8 +1,6 @@
 -- Copyright (C) Kong Inc.
 local timestamp = require "kong.tools.timestamp"
 local policies = require "kong.plugins.rate-limiting.policies"
-local kong_meta = require "kong.meta"
-
 
 local kong = kong
 local ngx = ngx
@@ -48,7 +46,7 @@ local X_RATELIMIT_REMAINING = {
 local RateLimitingHandler = {}
 
 
-RateLimitingHandler.VERSION = kong_meta.version
+RateLimitingHandler.VERSION = require "kong.constants".VERSION
 RateLimitingHandler.PRIORITY = 910
 
 

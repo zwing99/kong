@@ -1,13 +1,12 @@
 local _M = {}
 
 -- imports
-local kong_meta   = require "kong.meta"
 local buffer      = require("string.buffer")
 local ngx_re_find = ngx.re.find
 --
 
 _M.PRIORITY = 771
-_M.VERSION = kong_meta.version
+_M.VERSION = require "kong.constants".VERSION
 
 local function bad_request(msg, reveal_msg_to_client)
   -- don't let users know 'ai-prompt-guard' is in use

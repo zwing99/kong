@@ -1,7 +1,7 @@
 local balancer = require "kong.internal.balancer"
 local utils = require "kong.tools.utils"
 local cjson = require "cjson"
-local workspaces   = require "kong.workspaces"
+local workspaces   = require "kong.components.workspaces"
 
 
 local setmetatable = setmetatable

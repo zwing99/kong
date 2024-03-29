@@ -519,7 +519,7 @@ local function get_db_utils(strategy, tables, plugins, vaults, skip_migrations)
   end
 
   if strategy ~= "off" then
-    local workspaces = require "kong.workspaces"
+    local workspaces = require "kong.components.workspaces"
     workspaces.upsert_default(db)
   end
 

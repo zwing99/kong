@@ -6,12 +6,11 @@ local ai_module = require("kong.llm")
 local llm = require("kong.llm")
 local cjson = require("cjson.safe")
 local kong_utils = require("kong.tools.gzip")
-local kong_meta = require("kong.meta")
 --
 
 
 _M.PRIORITY = 770
-_M.VERSION = kong_meta.version
+_M.VERSION = require "kong.constants".VERSION
 
 
 -- reuse this table for error message response

@@ -1,7 +1,5 @@
 local body_transformer = require "kong.plugins.response-transformer.body_transformer"
 local header_transformer = require "kong.plugins.response-transformer.header_transformer"
-local kong_meta = require "kong.meta"
-
 
 local transform_headers = header_transformer.transform_headers
 local transform_json_body = body_transformer.transform_json_body
@@ -14,7 +12,7 @@ local kong = kong
 
 local ResponseTransformerHandler = {
   PRIORITY = 800,
-  VERSION = kong_meta.version,
+  VERSION = require "kong.constants".VERSION,
 }
 
 

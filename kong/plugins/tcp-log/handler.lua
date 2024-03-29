@@ -1,7 +1,5 @@
 local cjson = require "cjson"
 local sandbox = require "kong.tools.sandbox".sandbox
-local kong_meta = require "kong.meta"
-
 
 local kong = kong
 local ngx = ngx
@@ -63,7 +61,7 @@ end
 
 local TcpLogHandler = {
   PRIORITY = 7,
-  VERSION = kong_meta.version,
+  VERSION = require "kong.constants".VERSION,
 }
 
 

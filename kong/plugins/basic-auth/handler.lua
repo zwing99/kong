@@ -1,9 +1,7 @@
 -- Copyright (C) Kong Inc.
 local access = require "kong.plugins.basic-auth.access"
-local kong_meta = require "kong.meta"
-
 local BasicAuthHandler = {
-  VERSION = kong_meta.version,
+  VERSION = require "kong.constants".VERSION,
   PRIORITY = 1100,
 }
 

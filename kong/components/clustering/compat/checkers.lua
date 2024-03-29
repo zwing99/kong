@@ -8,7 +8,7 @@ do
   local ngx_WARN = ngx.WARN
   local fmt = string.format
 
-  local KONG_VERSION = require("kong.meta").version
+  local KONG_VERSION = require("kong.constants").VERSION
 
   local _log_prefix = "[clustering] "
 

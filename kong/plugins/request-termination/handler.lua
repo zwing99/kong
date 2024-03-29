@@ -1,6 +1,4 @@
 local kong = kong
-local kong_meta = require "kong.meta"
-
 local DEFAULT_RESPONSE = {
   [401] = "Unauthorized",
   [404] = "Not found",
@@ -15,7 +13,7 @@ local RequestTerminationHandler = {}
 
 
 RequestTerminationHandler.PRIORITY = 2
-RequestTerminationHandler.VERSION = kong_meta.version
+RequestTerminationHandler.VERSION = require "kong.constants".VERSION
 
 
 function RequestTerminationHandler:access(conf)

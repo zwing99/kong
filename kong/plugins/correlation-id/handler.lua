@@ -1,7 +1,5 @@
 -- Copyright (C) Kong Inc.
 local uuid = require "kong.tools.utils".uuid
-local kong_meta = require "kong.meta"
-
 
 local kong = kong
 
@@ -43,7 +41,7 @@ local CorrelationIdHandler = {}
 
 
 CorrelationIdHandler.PRIORITY = 1
-CorrelationIdHandler.VERSION = kong_meta.version
+CorrelationIdHandler.VERSION = require "kong.constants".VERSION
 
 
 function CorrelationIdHandler:init_worker()

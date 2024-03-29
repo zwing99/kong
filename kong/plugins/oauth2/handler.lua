@@ -1,9 +1,7 @@
 local access = require "kong.plugins.oauth2.access"
-local kong_meta = require "kong.meta"
-
 
 local OAuthHandler = {
-  VERSION = kong_meta.version,
+  VERSION = require "kong.constants".VERSION,
   PRIORITY = 1400,
 }
 

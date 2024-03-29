@@ -217,35 +217,16 @@ end
 local _PDK = { }
 
 
-function _PDK.new(kong_config, self)
-  if kong_config then
-    if type(kong_config) ~= "table" then
-      error("kong_config must be a table", 2)
-    end
+function _PDK.new(kong_global)
+  kong_global = kong_global or {}
 
-  else
-    kong_config = {}
+  local kong_config = kong_global.configuration or {}
+  if type(kong_config) ~= "table" then
+    error("kong_config must be a table", 2)
   end
 
-  self = self or {}
-
-  self.configuration = setmetatable({
-    remove_sensitive = function()
-      local conf_loader = require "kong.internal.conf_loader"
-      return conf_loader.remove_sensitive(kong_config)
-    end,
-  }, {
-    __index = function(_, v)
-      return kong_config[v]
-    end,
-
-    __newindex = function()
-      error("cannot write to configuration", 2)
-    end,
-  })
-
   for _, module_name in ipairs(MAJOR_MODULES) do
-    local parent = self
+    local parent = kong_global
     for part in module_name:gmatch("([^.]+)%.") do
       if not parent[part] then
         parent[part] = {}
@@ -261,13 +242,15 @@ function _PDK.new(kong_config, self)
 
     local mod = require("kong.pdk." .. module_name)
 
-    parent[child] = mod.new(self)
+    parent[child] = mod.new(kong_global)
   end
 
-  self._log = self.log
-  self.log = nil
+  kong_global._log = kong_global.log
+  kong_global.log = nil
 
-  return setmetatable(self, {
+  require "kong.pdk.private.node".init_node_id(kong_config)
+
+  return setmetatable(kong_global, {
     __index = function(t, k)
       if k == "log" then
         if base.get_request() then

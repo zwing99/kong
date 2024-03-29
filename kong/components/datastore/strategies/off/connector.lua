@@ -1,4 +1,4 @@
-local meta = require "kong.meta"
+local constants = require "kong.constants"
 
 
 local OffConnector   = {}
@@ -32,7 +32,7 @@ function OffConnector:infos()
     strategy = "off",
     db_name = "in memory",
     db_desc = "cache",
-    db_ver = meta._VERSION,
+    db_ver = constants.VERSION,
   }
 end
 

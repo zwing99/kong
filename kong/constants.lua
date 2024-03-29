@@ -97,7 +97,17 @@ for k in pairs(key_formats_map) do
   key_formats[#key_formats + 1] = k
 end
 
+local VERSION_TABLE = require "kong.config".VERSION
+
 local constants = {
+  NAME = "kong",
+  SERVER_TOKENS = "kong/" .. tostring(version),
+
+  LMDB_VALIDATION_TAG = string.format("%d.%d",
+                                      VERSION_TABLE.major,
+                                      VERSION_TABLE.minor),
+  VERSION = tostring(VERSION_TABLE),
+
   CJSON_MAX_PRECISION = 16,
   BUNDLED_PLUGINS = plugin_map,
   DEPRECATED_PLUGINS = deprecated_plugin_map,

@@ -1,9 +1,10 @@
 local DB = require "kong.components.datastore"
 local log = require "kong.components.cli.utils.log"
 local tty = require "kong.components.cli.utils.tty"
-local meta = require "kong.meta"
 local conf_loader = require "kong.internal.conf_loader"
-local kong_global = require "kong.global"
+local constants = require "kong.constants"
+local globals = require "kong.internal.globals"
+local PDK = require "kong.pdk"
 local prefix_handler = require "kong.components.cli.utils.prefix_handler"
 local migrations_utils = require "kong.components.cli.utils.migrations"
 
@@ -94,8 +95,11 @@ local function execute(args)
 
   assert(prefix_handler.prepare_prefix(conf, args.nginx_conf, true))
 
-  _G.kong = kong_global.new()
-  kong_global.init_pdk(_G.kong, conf)
+  globals.create_G_kong()
+
+  _G.kong.configuration = conf
+
+  PDK.new(_G.kong)
 
   local db = assert(DB.new(conf))
   assert(db:init_connector())
@@ -132,7 +136,7 @@ local function execute(args)
 
       log.warn("Database has pending migrations from a previous upgrade, " ..
                "and new migrations from this upgrade (version %s)",
-               tostring(meta._VERSION))
+               tostring(constants.VERSION))
 
       log("\nRun 'kong migrations finish' when ready to complete pending " ..
           "migrations (%s %s will be incompatible with the previous Kong " ..

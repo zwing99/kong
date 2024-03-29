@@ -1,7 +1,7 @@
 local perf = require "spec.helpers.perf"
 local split = require "ngx.re".split
 local utils = require "spec.helpers.perf.utils"
-local workspaces = require "kong.workspaces"
+local workspaces = require "kong.components.workspaces"
 local stringx = require "pl.stringx"
 local tablex = require "pl.tablex"
 local shell = require "resty.shell"

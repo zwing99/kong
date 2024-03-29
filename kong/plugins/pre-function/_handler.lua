@@ -1,7 +1,5 @@
 local resty_mlcache = require "kong.resty.mlcache"
 local sandbox = require "kong.tools.sandbox"
-local kong_meta = require "kong.meta"
-
 -- handler file for both the pre-function and post-function plugin
 
 
@@ -101,7 +99,7 @@ return function(priority)
 
   local ServerlessFunction = {
     PRIORITY = priority,
-    VERSION = kong_meta.version,
+    VERSION = require "kong.constants".VERSION,
   }
 
   function ServerlessFunction:certificate(config)

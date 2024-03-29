@@ -1,7 +1,5 @@
 local lrucache   = require "resty.lrucache"
 local url        = require "socket.url"
-local kong_meta = require "kong.meta"
-
 
 local kong     = kong
 local re_find  = ngx.re.find
@@ -18,7 +16,7 @@ local CorsHandler = {}
 
 
 CorsHandler.PRIORITY = 2000
-CorsHandler.VERSION = kong_meta.version
+CorsHandler.VERSION = require "kong.constants".VERSION
 
 
 -- per-plugin cache of normalized origins for runtime comparison

@@ -3,7 +3,7 @@ local iteration = require "kong.components.datastore.iteration"
 local utils = require "kong.tools.utils"
 local defaults = require "kong.components.datastore.strategies.connector".defaults
 local hooks = require "kong.hooks"
-local workspaces = require "kong.workspaces"
+local workspaces = require "kong.components.workspaces"
 local new_tab = require "table.new"
 local DAO_MAX_TTL = require("kong.constants").DATABASE.DAO_MAX_TTL
 

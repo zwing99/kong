@@ -2,7 +2,8 @@ local migrations_utils = require "kong.components.cli.utils.migrations"
 local prefix_handler = require "kong.components.cli.utils.prefix_handler"
 local nginx_signals = require "kong.components.cli.utils.nginx_signals"
 local conf_loader = require "kong.internal.conf_loader"
-local kong_global = require "kong.global"
+local globals = require "kong.internal.globals"
+local PDK = require "kong.pdk"
 local kill = require "kong.components.cli.utils.kill"
 local log = require "kong.components.cli.utils.log"
 local DB = require "kong.components.datastore"
@@ -61,8 +62,11 @@ local function execute(args)
 
   cleanup_dangling_unix_sockets(conf.prefix)
 
-  _G.kong = kong_global.new()
-  kong_global.init_pdk(_G.kong, conf)
+  globals.create_G_kong()
+
+  _G.kong.configuration = conf
+
+  PDK.new(_G.kong)
 
   local db = assert(DB.new(conf))
   assert(db:init_connector())
