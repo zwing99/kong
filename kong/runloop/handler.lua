@@ -73,7 +73,7 @@ local ROUTER_CACHE_NEG = lrucache.new(ROUTER_CACHE_SIZE)
 
 
 local DEFAULT_PROXY_HTTP_VERSION = "1.1"
-local MAX_HEADERS                = 100
+local DEFAULT_MAX_RESP_HEADERS   = 100
 
 
 local NOOP = function() end
@@ -1498,7 +1498,9 @@ return {
 
           local kong_outbound_via = proxy_http_version .. " " .. SERVER_HEADER
 
-          local resp_via = ngx.resp.get_headers(MAX_HEADERS)[headers.VIA]
+          local lua_max_resp_headers = kong and kong.configuration and kong.configuration.lua_max_resp_headers
+                                       or DEFAULT_MAX_RESP_HEADERS
+          local resp_via = ngx.resp.get_headers(lua_max_resp_headers)[headers.VIA]
           header[headers.VIA] = resp_via and resp_via .. "," .. kong_outbound_via or
                                 kong_outbound_via
         end
