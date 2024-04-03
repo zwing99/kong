@@ -341,7 +341,7 @@ local function execute_global_plugins_iterator(plugins_iterator, phase, ctx)
       req_dyn_hook_run_hooks("timing", "before:plugin", plugin.name, ctx.plugin_id)
     end
 
-    req_dyn_hook_run_hooks(old_ctx, "etrace", "before:a_plugin", ctx, plugin.name, ctx.plugin_id)
+    req_dyn_hook_run_hooks("etrace", "before:a_plugin", old_ctx, plugin.name, ctx.plugin_id)
 
     plugin.handler[phase](plugin.handler, configuration)
 
@@ -349,7 +349,7 @@ local function execute_global_plugins_iterator(plugins_iterator, phase, ctx)
       req_dyn_hook_run_hooks("timing", "after:plugin")
     end
 
-    req_dyn_hook_run_hooks(old_ctx, "etrace", "after:a_plugin", ctx, plugin.name, ctx.plugin_id)
+    req_dyn_hook_run_hooks("etrace", "after:a_plugin", old_ctx, plugin.name, ctx.plugin_id)
 
     reset_plugin_context(ctx, old_ws)
 
@@ -362,7 +362,7 @@ local function execute_global_plugins_iterator(plugins_iterator, phase, ctx)
     req_dyn_hook_run_hooks("timing", "after:plugin_iterator")
   end
 
-  req_dyn_hook_run_hooks(old_ctx, "etrace", "after:plugin_iterator", ctx)
+  req_dyn_hook_run_hooks("etrace", "after:plugin_iterator", old_ctx)
 end
 
 
@@ -382,6 +382,7 @@ local function execute_collecting_plugins_iterator(plugins_iterator, phase, ctx)
 
   local old_ws = ctx.workspace
   local has_timing = ctx.has_timing
+  local old_ctx = ctx
 
   if has_timing then
     req_dyn_hook_run_hooks("timing", "before:plugin_iterator")
@@ -400,7 +401,7 @@ local function execute_collecting_plugins_iterator(plugins_iterator, phase, ctx)
         req_dyn_hook_run_hooks( "timing", "before:plugin", plugin.name, ctx.plugin_id)
       end
 
-      req_dyn_hook_run_hooks("etrace", "before:a_plugin", ctx, plugin.name, ctx.plugin_id)
+      req_dyn_hook_run_hooks("etrace", "before:a_plugin", old_ctx, plugin.name, ctx.plugin_id)
 
       local co = coroutine.create(plugin.handler[phase])
       local cok, cerr = coroutine.resume(co, plugin.handler, configuration)
@@ -409,7 +410,7 @@ local function execute_collecting_plugins_iterator(plugins_iterator, phase, ctx)
         req_dyn_hook_run_hooks("timing", "after:plugin")
       end
 
-      req_dyn_hook_run_hooks("etrace", "after:a_plugin", ctx, plugin.name, ctx.plugin_id)
+      req_dyn_hook_run_hooks("etrace", "after:a_plugin", old_ctx, plugin.name, ctx.plugin_id)
 
       if not cok then
         -- set tracing error
@@ -441,7 +442,7 @@ local function execute_collecting_plugins_iterator(plugins_iterator, phase, ctx)
     req_dyn_hook_run_hooks("timing", "after:plugin_iterator")
   end
 
-  req_dyn_hook_run_hooks("etrace", "after:plugin_iterator", ctx)
+  req_dyn_hook_run_hooks("etrace", "after:plugin_iterator", old_ctx)
 
   ctx.delay_response = nil
 end
@@ -479,7 +480,7 @@ local function execute_collected_plugins_iterator(plugins_iterator, phase, ctx)
       req_dyn_hook_run_hooks("timing", "before:plugin", plugin.name, ctx.plugin_id)
     end
 
-    req_dyn_hook_run_hooks(old_ctx, "etrace", "before:a_plugin", ctx, plugin.name, ctx.plugin_id)
+    req_dyn_hook_run_hooks("etrace", "before:a_plugin", old_ctx, plugin.name, ctx.plugin_id)
 
     plugin.handler[phase](plugin.handler, configuration)
 
@@ -487,7 +488,7 @@ local function execute_collected_plugins_iterator(plugins_iterator, phase, ctx)
       req_dyn_hook_run_hooks("timing", "after:plugin")
     end
 
-    req_dyn_hook_run_hooks(old_ctx, "etrace", "after:a_plugin", ctx, plugin.name, ctx.plugin_id)
+    req_dyn_hook_run_hooks("etrace", "after:a_plugin", old_ctx, plugin.name, ctx.plugin_id)
 
     reset_plugin_context(ctx, old_ws)
 
@@ -500,7 +501,7 @@ local function execute_collected_plugins_iterator(plugins_iterator, phase, ctx)
     req_dyn_hook_run_hooks("timing", "after:plugin_iterator")
   end
 
-  req_dyn_hook_run_hooks(old_ctx, "etrace", "after:plugin_iterator", ctx)
+  req_dyn_hook_run_hooks("etrace", "after:plugin_iterator", ctx)
 end
 
 

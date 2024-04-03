@@ -9,7 +9,8 @@ edition = "2021"
 bytes = "1.6.0"
 prost = "0.12.3"
 rand = "0.8.5"
-opentelemetry-proto = { version = "0.5.0", features = ["gen-tonic", "trace"] }
+opentelemetry-proto = { version = "0.5.0", features = ["gen-tonic", "trace", "logs", "metrics"] }
+snap = "1.1.1"
 
 [lib]
 crate-type = ["lib", "cdylib", "staticlib"]

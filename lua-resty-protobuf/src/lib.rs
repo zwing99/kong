@@ -4,19 +4,20 @@ use prost::Message;
 use rand::prelude::*;
 use std::time;
 
-use bytes::{BytesMut, BufMut};
+use bytes::BytesMut;
 
 use opentelemetry_proto::tonic::{
-    common::v1::{any_value, AnyValue, KeyValue},
-    trace::v1::Span,
+    common::v1::{any_value, AnyValue, InstrumentationScope, KeyValue},
+    logs::v1::{LogRecord, LogsData, ResourceLogs, ScopeLogs, SeverityNumber},
+    metrics::v1::{
+        metric::Data, number_data_point::Value, Gauge, Metric, MetricsData, NumberDataPoint,
+        ResourceMetrics, ScopeMetrics, Sum,
+    },
+    resource::v1::Resource,
+    trace::v1::{ResourceSpans, ScopeSpans, Span, TracesData},
 };
 
 const DEFAULT_CONTEXT_CAPACITY: usize = 16;
-const DEFAULT_SERIALIZED_CAPACITY: usize = 2048;
-const MAX_BUFFER_SIZE: usize = 64 * 1024 - 1 - 8 - 20;
-
-static mut udp_socket: Option<std::net::UdpSocket> = None;
-static mut buffer: Option<BytesMut> = None;
 
 fn _get_current_time_unix_nano() -> u64 {
     let now = time::SystemTime::now();
@@ -31,31 +32,72 @@ fn _get_current_time_unix_nano() -> u64 {
     }
 }
 
-pub struct Trace {
+pub struct Traces {
     rng: ThreadRng,
     context: Vec<Span>,
 
     trace_id: [u8; 16],
 
-    serialized: BytesMut,
+    traces_data: TracesData,
+    resource_spans: ResourceSpans,
+    scope_spans: ScopeSpans,
 }
 
-impl Trace {
+impl Traces {
     pub fn new() -> Self {
         let mut rng = thread_rng();
         let mut trace_id = [0; 16];
         rng.fill_bytes(&mut trace_id);
 
-        Trace {
+        let mut scope_spans = ScopeSpans::default();
+        scope_spans.spans.reserve(128);
+
+        Traces {
             rng,
             context: Vec::with_capacity(DEFAULT_CONTEXT_CAPACITY),
+
             trace_id,
-            serialized: BytesMut::with_capacity(DEFAULT_SERIALIZED_CAPACITY),
+
+            traces_data: TracesData::default(),
+            resource_spans: ResourceSpans::default(),
+            scope_spans,
         }
     }
 
-    pub fn get_serialized(&self) -> &[u8] {
-        &self.serialized
+    pub fn get_serialized(mut self, buf: &mut BytesMut) {
+        let mut resource = Resource::default();
+        resource.attributes.push(KeyValue {
+            key: "service.name".to_string(),
+            value: Some(AnyValue {
+                value: Some(any_value::Value::StringValue(
+                    "kong-gateway-qiqi-demo".to_string(),
+                )),
+            }),
+        });
+        resource.attributes.push(KeyValue {
+            key: "service".to_string(),
+            value: Some(AnyValue {
+                value: Some(any_value::Value::StringValue(
+                    "kong-gateway-qiqi-demo".to_string(),
+                )),
+            }),
+        });
+        resource.attributes.push(KeyValue {
+            key: "env".to_string(),
+            value: Some(AnyValue {
+                value: Some(any_value::Value::StringValue("dev".to_string())),
+            }),
+        });
+
+        let mut instrumentation_scope = InstrumentationScope::default();
+        instrumentation_scope.name = "kong-gateway-efficient-tracing-subsystem".to_string();
+        self.scope_spans.scope = Some(instrumentation_scope);
+
+        self.resource_spans.resource = Some(resource);
+        self.resource_spans.scope_spans.push(self.scope_spans);
+        self.traces_data.resource_spans.push(self.resource_spans);
+
+        self.traces_data.encode(buf).unwrap();
     }
 
     pub fn enter_span(&mut self, name: &str) {
@@ -75,12 +117,10 @@ impl Trace {
     pub fn exit_span(&mut self) {
         debug_assert!(self.context.len() > 0, "No span to exit");
 
-        let span = self.context.last_mut().unwrap();
+        let mut span = self.context.pop().unwrap();
         span.end_time_unix_nano = _get_current_time_unix_nano();
 
-        span.encode(&mut self.serialized).unwrap();
-
-        self.context.pop();
+        self.scope_spans.spans.push(span);
     }
 
     pub fn add_string_attribute(&mut self, key: &str, value: &str) {
@@ -143,32 +183,231 @@ impl Trace {
         self.context.last_mut().unwrap().attributes.push(attribute);
     }
 
-    pub unsafe fn send_to_udp(&self) {
-        if udp_socket.is_none() {
-            udp_socket = Some(std::net::UdpSocket::bind("127.0.0.1:0").unwrap());
-            udp_socket.as_mut().unwrap().connect("127.0.0.1:9999").unwrap();
-        }
-
-        if buffer.is_none() {
-            buffer = Some(BytesMut::with_capacity(DEFAULT_SERIALIZED_CAPACITY));
-        }
-
-        let socket = udp_socket.as_ref().unwrap();
-        let buf = buffer.as_mut().unwrap();
-
-        assert!(self.serialized.len() < MAX_BUFFER_SIZE, "Serialized data too large");
-        
-        if buf.len() + self.serialized.len() >= MAX_BUFFER_SIZE {
-            socket.send(&buf).unwrap();
-            buf.clear();
-        }
-
-        buf.extend_from_slice(&self.serialized);
-    }
-
     fn _gen_span_id(&mut self) -> [u8; 8] {
         let mut span_id = [0; 8];
         self.rng.fill_bytes(&mut span_id);
         span_id
+    }
+}
+
+pub struct Metrics {
+    metrics_data: MetricsData,
+    resources_metrics: ResourceMetrics,
+    scope_metrics: ScopeMetrics,
+}
+
+impl Metrics {
+    pub fn new() -> Self {
+        let mut scope_metrics = ScopeMetrics::default();
+        scope_metrics.metrics.reserve(16);
+
+        Metrics {
+            metrics_data: MetricsData::default(),
+            resources_metrics: ResourceMetrics::default(),
+            scope_metrics,
+        }
+    }
+
+    pub fn get_serialized(mut self, buf: &mut BytesMut) {
+        let mut resource = Resource::default();
+        resource.attributes.push(KeyValue {
+            key: "service.name".to_string(),
+            value: Some(AnyValue {
+                value: Some(any_value::Value::StringValue(
+                    "kong-gateway-qiqi-demo".to_string(),
+                )),
+            }),
+        });
+        resource.attributes.push(KeyValue {
+            key: "service".to_string(),
+            value: Some(AnyValue {
+                value: Some(any_value::Value::StringValue(
+                    "kong-gateway-qiqi-demo".to_string(),
+                )),
+            }),
+        });
+        resource.attributes.push(KeyValue {
+            key: "env".to_string(),
+            value: Some(AnyValue {
+                value: Some(any_value::Value::StringValue("dev".to_string())),
+            }),
+        });
+
+        self.resources_metrics.resource = Some(resource);
+        self.resources_metrics
+            .scope_metrics
+            .push(self.scope_metrics);
+        self.metrics_data
+            .resource_metrics
+            .push(self.resources_metrics);
+
+        self.metrics_data.encode(buf).unwrap();
+    }
+
+    pub fn add_int64_gauge(&mut self, name: &str, value: i64) {
+        let mut gauge = Gauge::default();
+        let mut data_point = NumberDataPoint::default();
+
+        data_point.time_unix_nano = _get_current_time_unix_nano();
+        data_point.value = Some(Value::AsInt(value));
+
+        gauge.data_points.push(data_point);
+
+        let mut metric = Metric::default();
+        metric.name = name.to_string();
+        metric.data = Some(Data::Gauge(gauge));
+
+        self.scope_metrics.metrics.push(metric);
+    }
+
+    pub fn add_double_gauge(&mut self, name: &str, value: f64) {
+        let mut gauge = Gauge::default();
+        let mut data_point = NumberDataPoint::default();
+
+        data_point.time_unix_nano = _get_current_time_unix_nano();
+        data_point.value = Some(Value::AsDouble(value));
+
+        gauge.data_points.push(data_point);
+
+        let mut metric = Metric::default();
+        metric.name = name.to_string();
+        metric.data = Some(Data::Gauge(gauge));
+
+        self.scope_metrics.metrics.push(metric);
+    }
+
+    pub fn add_int64_sum(&mut self, name: &str, value: i64) {
+        let mut sum = Sum::default();
+        let mut data_point = NumberDataPoint::default();
+
+        data_point.time_unix_nano = _get_current_time_unix_nano();
+        data_point.value = Some(Value::AsInt(value));
+
+        sum.data_points.push(data_point);
+
+        let mut metric = Metric::default();
+        metric.name = name.to_string();
+        metric.data = Some(Data::Sum(sum));
+
+        self.scope_metrics.metrics.push(metric);
+    }
+
+    pub fn add_double_sum(&mut self, name: &str, value: f64) {
+        let mut sum = Sum::default();
+        let mut data_point = NumberDataPoint::default();
+
+        data_point.time_unix_nano = _get_current_time_unix_nano();
+        data_point.value = Some(Value::AsDouble(value));
+
+        sum.data_points.push(data_point);
+
+        let mut metric = Metric::default();
+        metric.name = name.to_string();
+        metric.data = Some(Data::Sum(sum));
+
+        self.scope_metrics.metrics.push(metric);
+    }
+}
+
+pub struct Logs {
+    logs_data: LogsData,
+    resources_logs: ResourceLogs,
+    scope_logs: ScopeLogs,
+}
+
+impl Logs {
+    pub fn new() -> Self {
+        let mut scope_logs = ScopeLogs::default();
+        scope_logs.log_records.reserve(64);
+
+        Logs {
+            logs_data: LogsData::default(),
+            resources_logs: ResourceLogs::default(),
+            scope_logs,
+        }
+    }
+
+    pub fn get_serialized(mut self, buf: &mut BytesMut) {
+        let mut resource = Resource::default();
+        resource.attributes.push(KeyValue {
+            key: "service.name".to_string(),
+            value: Some(AnyValue {
+                value: Some(any_value::Value::StringValue(
+                    "kong-gateway-qiqi-demo".to_string(),
+                )),
+            }),
+        });
+        resource.attributes.push(KeyValue {
+            key: "service".to_string(),
+            value: Some(AnyValue {
+                value: Some(any_value::Value::StringValue(
+                    "kong-gateway-qiqi-demo".to_string(),
+                )),
+            }),
+        });
+        resource.attributes.push(KeyValue {
+            key: "env".to_string(),
+            value: Some(AnyValue {
+                value: Some(any_value::Value::StringValue("dev".to_string())),
+            }),
+        });
+
+        self.resources_logs.resource = Some(resource);
+        self.resources_logs.scope_logs.push(self.scope_logs);
+        self.logs_data.resource_logs.push(self.resources_logs);
+
+        self.logs_data.encode(buf).unwrap();
+    }
+
+    pub fn add_info_log(&mut self, time_unix_nano: u64, message: &str) {
+        let mut log_record = LogRecord::default();
+        log_record.time_unix_nano = time_unix_nano;
+        log_record.observed_time_unix_nano = _get_current_time_unix_nano();
+        log_record.severity_number = SeverityNumber::Info as i32;
+        log_record.body = Some(AnyValue {
+            value: Some(any_value::Value::StringValue(message.to_string())),
+        });
+
+        self.scope_logs.log_records.push(log_record);
+    }
+
+    pub fn add_notice_log(&mut self, time_unix_nano: u64, message: &str) {
+        self.add_info_log(time_unix_nano, message);
+    }
+
+    pub fn add_warning_log(&mut self, time_unix_nano: u64, message: &str) {
+        let mut log_record = LogRecord::default();
+        log_record.time_unix_nano = time_unix_nano;
+        log_record.observed_time_unix_nano = _get_current_time_unix_nano();
+        log_record.severity_number = SeverityNumber::Warn as i32;
+        log_record.body = Some(AnyValue {
+            value: Some(any_value::Value::StringValue(message.to_string())),
+        });
+
+        self.scope_logs.log_records.push(log_record);
+    }
+
+    pub fn add_error_log(&mut self, time_unix_nano: u64, message: &str) {
+        let mut log_record = LogRecord::default();
+        log_record.time_unix_nano = time_unix_nano;
+        log_record.observed_time_unix_nano = _get_current_time_unix_nano();
+        log_record.severity_number = SeverityNumber::Error as i32;
+        log_record.body = Some(AnyValue {
+            value: Some(any_value::Value::StringValue(message.to_string())),
+        });
+
+        self.scope_logs.log_records.push(log_record);
+    }
+
+    pub fn add_fatal_log(&mut self, time_unix_nano: u64, message: &str) {
+        let mut log_record = LogRecord::default();
+        log_record.time_unix_nano = time_unix_nano;
+        log_record.observed_time_unix_nano = _get_current_time_unix_nano();
+        log_record.severity_number = SeverityNumber::Fatal as i32;
+        log_record.body = Some(AnyValue {
+            value: Some(any_value::Value::StringValue(message.to_string())),
+        });
+
+        self.scope_logs.log_records.push(log_record);
     }
 }

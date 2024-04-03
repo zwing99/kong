@@ -1,42 +1,24 @@
+use bytes::BytesMut;
+
+use crate::Traces;
 use std::ffi;
 
-use crate::Trace;
-use std::cmp::min;
-
-fn write_error_buffer(err_buf: *mut ffi::c_uchar, err_buf_len: ffi::c_uint, err_msg: &String) {
-    if err_buf_len as usize == 0 {
-        return;
-    }
-
-    let len = min((err_buf_len as usize) - 1, err_msg.len());
-    unsafe {
-        std::ptr::copy_nonoverlapping(err_msg.as_ptr(), err_buf, len);
-        *err_buf.add(len) = 0;
-    }
-}
+use super::utils::write_error_buffer;
 
 #[no_mangle]
-pub unsafe extern "C" fn lua_resty_protobuf_trace_new() -> *mut ffi::c_void {
-    Box::into_raw(Box::new(Trace::new())) as *mut ffi::c_void
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn lua_resty_protobuf_trace_free(trace: *mut ffi::c_void) {
-    let trace = unsafe { Box::from_raw(trace as *mut Trace) };
-    trace.send_to_udp();
-
-    // drop it explicitly to make the logic more clear
-    drop(trace);
+pub unsafe extern "C" fn lua_resty_protobuf_trace_new() -> *mut Traces {
+    Box::into_raw(Box::new(Traces::new()))
 }
 
 #[no_mangle]
 pub extern "C" fn lua_resty_protobuf_trace_get_serialized(
-    trace: *mut ffi::c_void,
+    traces: *mut Traces,
     buf: *mut ffi::c_uchar,
     buf_len: ffi::c_uint,
 ) -> ffi::c_uint {
-    let trace = unsafe { &*(trace as *mut Trace) };
-    let serialized = trace.get_serialized();
+    let traces = unsafe { Box::from_raw(traces) };
+    let mut serialized = BytesMut::with_capacity(buf_len as usize);
+    traces.get_serialized(&mut serialized);
 
     let expected_len = serialized.len();
     if expected_len > buf_len as usize {
@@ -52,39 +34,40 @@ pub extern "C" fn lua_resty_protobuf_trace_get_serialized(
 
 #[no_mangle]
 pub extern "C" fn lua_resty_protobuf_trace_enter_span(
-    trace: *mut ffi::c_void,
+    traces: *mut Traces,
     name: *const ffi::c_char,
     name_len: ffi::c_uint,
     err_buf: *mut ffi::c_uchar,
     err_buf_len: ffi::c_uint,
 ) -> ffi::c_int {
-    let trace = unsafe { &mut *(trace as *mut Trace) };
+    let traces = unsafe { &mut *traces };
     let name = unsafe { std::slice::from_raw_parts(name as *const u8, name_len as usize) };
     let name = std::str::from_utf8(name);
 
-    if let Err(name) = name {
+    if let Err(e) = name {
         let mut err_msg = String::new();
         err_msg.push_str("arguement `name` is not a valid utf-8 string: ");
-        err_msg.push_str(name.to_string().as_str());
+        err_msg.push_str(e.to_string().as_str());
         write_error_buffer(err_buf, err_buf_len, &err_msg);
 
         return 1;
     }
 
-    trace.enter_span(name.unwrap());
+    traces.enter_span(name.unwrap());
 
-    return 0;
+    0
 }
 
 #[no_mangle]
-pub extern "C" fn lua_resty_protobuf_trace_exit_span(trace: *mut ffi::c_void) {
-    let trace = unsafe { &mut *(trace as *mut Trace) };
-    trace.exit_span();
+pub extern "C" fn lua_resty_protobuf_trace_exit_span(traces: *mut Traces) {
+    let traces = unsafe { &mut *traces };
+    traces.exit_span();
 }
+
 
 #[no_mangle]
 pub extern "C" fn lua_resty_protobuf_trace_add_string_attribute(
-    trace: *mut ffi::c_void,
+    traces: *mut Traces,
     key: *const ffi::c_char,
     key_len: ffi::c_uint,
     value: *const ffi::c_char,
@@ -92,7 +75,7 @@ pub extern "C" fn lua_resty_protobuf_trace_add_string_attribute(
     err_buf: *mut ffi::c_uchar,
     err_buf_len: ffi::c_uint,
 ) -> ffi::c_int {
-    let trace = unsafe { &mut *(trace as *mut Trace) };
+    let traces = unsafe { &mut *traces };
     let key = unsafe { std::slice::from_raw_parts(key as *const u8, key_len as usize) };
     let key = std::str::from_utf8(key);
 
@@ -117,21 +100,21 @@ pub extern "C" fn lua_resty_protobuf_trace_add_string_attribute(
         return 1;
     }
 
-    trace.add_string_attribute(key.unwrap(), value.unwrap());
+    traces.add_string_attribute(key.unwrap(), value.unwrap());
 
     0
 }
 
 #[no_mangle]
 pub extern "C" fn lua_resty_protobuf_trace_add_bool_attribute(
-    trace: *mut ffi::c_void,
+    traces: *mut Traces,
     key: *const ffi::c_char,
     key_len: ffi::c_uint,
     value: ffi::c_int,
     err_buf: *mut ffi::c_uchar,
     err_buf_len: ffi::c_uint,
 ) -> ffi::c_int {
-    let trace = unsafe { &mut *(trace as *mut Trace) };
+    let trace = unsafe { &mut *traces };
     let key = unsafe { std::slice::from_raw_parts(key as *const u8, key_len as usize) };
     let key = std::str::from_utf8(key);
 
@@ -151,14 +134,14 @@ pub extern "C" fn lua_resty_protobuf_trace_add_bool_attribute(
 
 #[no_mangle]
 pub extern "C" fn lua_resty_protobuf_trace_add_int64_attribute(
-    trace: *mut ffi::c_void,
+    traces: *mut Traces,
     key: *const ffi::c_char,
     key_len: ffi::c_uint,
     value: ffi::c_longlong,
     err_buf: *mut ffi::c_uchar,
     err_buf_len: ffi::c_uint,
 ) -> ffi::c_int {
-    let trace = unsafe { &mut *(trace as *mut Trace) };
+    let trace = unsafe { &mut *traces };
     let key = unsafe { std::slice::from_raw_parts(key as *const u8, key_len as usize) };
     let key = std::str::from_utf8(key);
 
@@ -178,14 +161,14 @@ pub extern "C" fn lua_resty_protobuf_trace_add_int64_attribute(
 
 #[no_mangle]
 pub extern "C" fn lua_resty_protobuf_trace_add_double_attribute(
-    trace: *mut ffi::c_void,
+    traces: *mut Traces,
     key: *const ffi::c_char,
     key_len: ffi::c_uint,
     value: ffi::c_double,
     err_buf: *mut ffi::c_uchar,
     err_buf_len: ffi::c_uint,
 ) -> ffi::c_int {
-    let trace = unsafe { &mut *(trace as *mut Trace) };
+    let trace = unsafe { &mut *traces };
     let key = unsafe { std::slice::from_raw_parts(key as *const u8, key_len as usize) };
     let key = std::str::from_utf8(key);
 
