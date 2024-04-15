@@ -1,9 +1,9 @@
 local _M = {}
 
 -- imports
-local ai_shared = require("kong.llm.drivers.shared")
-local ai_module = require("kong.llm")
-local llm = require("kong.llm")
+local ai_shared = require("kong.internal.llm.drivers.shared")
+local ai_module = require("kong.internal.llm")
+local llm = require("kong.internal.llm")
 local cjson = require("cjson.safe")
 local kong_utils = require("kong.tools.gzip")
 --
@@ -53,7 +53,7 @@ function _M:header_filter(conf)
     return
   end
 
-  local ai_driver = require("kong.llm.drivers." .. conf.model.provider)
+  local ai_driver = require("kong.internal.llm.drivers." .. conf.model.provider)
   local route_type = conf.route_type
 
   local is_gzip = kong.response.get_header("Content-Encoding") == "gzip"
@@ -191,7 +191,7 @@ function _M:access(conf)
   else
     kong.service.request.enable_buffering()
 
-    local ai_driver = require("kong.llm.drivers." .. conf.model.provider)
+    local ai_driver = require("kong.internal.llm.drivers." .. conf.model.provider)
 
     -- execute pre-request hooks for this driver
     local ok, err = ai_driver.pre_request(conf, request_table)

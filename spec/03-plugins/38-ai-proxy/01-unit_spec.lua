@@ -362,7 +362,7 @@ describe(PLUGIN_NAME .. ": (unit)", function()
 
         ---- actual testing code begins here
         describe(format_name .. " format test", function()
-          local driver = require("kong.llm.drivers." .. config.provider)
+          local driver = require("kong.internal.llm.drivers." .. config.provider)
 
           -- what we do is first put the SAME request message from the user, through the converter, for this provider/format
           it("converts to provider request format correctly", function()

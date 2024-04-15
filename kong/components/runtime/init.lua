@@ -135,8 +135,11 @@ function Runtime.register_globals(key, value)
 end
 
 function Runtime.execute_phase(phase)
-  local handlers = assert(Runtime.phase_handlers[phase],
-                          "no handlers registered for phase: " .. phase)
+  local handlers = Runtime.phase_handlers[phase]
+  if not handlers then
+    ngx.log(ngx.WARN, "no handlers registered for phase: " .. phase)
+    return true
+  end
 
   if phase ~= "init" then
     local ctx = ngx.ctx
@@ -192,27 +195,27 @@ function Runtime.ssl_certificate()
 end
 
 function Runtime.rewrite()
-  return require("kong").rewrite()
+  assert(Runtime.execute_phase("rewrite"))
 end
 
 function Runtime.access()
-  return require("kong").access()
+  assert(Runtime.execute_phase("access"))
 end
 
 function Runtime.header_filter()
-  return require("kong").header_filter()
+  assert(Runtime.execute_phase("header_filter"))
 end
 
 function Runtime.body_filter()
-  return require("kong").body_filter()
+  assert(Runtime.execute_phase("body_filter"))
 end
 
 function Runtime.log()
-  return require("kong").log()
+  assert(Runtime.execute_phase("log"))
 end
 
 function Runtime.handle_error()
-  return require("kong").handle_error()
+  --
 end
 
 function Runtime.admin_content()

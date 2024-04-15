@@ -55,6 +55,8 @@ local function init_worker_enter()
     end
   end
 
+  router.init_worker.enter()
+
   return true
 end
 

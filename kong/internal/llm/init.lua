@@ -5,7 +5,7 @@ local cjson     = require("cjson.safe")
 local re_match  = ngx.re.match
 local buf       = require("string.buffer")
 local lower     = string.lower
-local meta      = require "kong.meta"
+local constants     = require "kong.constants"
 local ai_shared = require("kong.internal.llm.drivers.shared")
 local strip     = require("kong.tools.utils").strip
 --
@@ -450,7 +450,7 @@ function _M:handle_streaming_request(body)
 
   ngx.status = 200
   ngx.header["Content-Type"] = "text/event-stream"
-  ngx.header["Via"] = meta._SERVER_TOKENS
+  ngx.header["Via"] = constants.SERVER_TOKENS
 
   for k, v in pairs(res.headers) do
     if not streaming_skip_headers[lower(k)] then

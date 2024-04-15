@@ -330,4 +330,121 @@ return {
   _set_build_router = _set_build_router,
   _set_router_version = _set_router_version,
   _get_updated_router = get_updated_router,
+
+  init_worker = {
+    enter = function ()
+      -- TODO: PR #9337 may affect the following line
+      local prefix = kong.configuration.prefix or ngx.config.prefix()
+
+      STREAM_TLS_TERMINATE_SOCK = fmt("unix:%s/stream_tls_terminate.sock", prefix)
+      STREAM_TLS_PASSTHROUGH_SOCK = fmt("unix:%s/stream_tls_passthrough.sock", prefix)
+
+      log_level.init_worker()
+
+      if kong.configuration.host_ports then
+        HOST_PORTS = kong.configuration.host_ports
+      end
+
+      if kong.configuration.anonymous_reports then
+        reports.init(kong.configuration)
+        reports.add_ping_value("database_version", kong.db.infos.db_ver)
+        reports.init_worker(kong.configuration)
+      end
+
+      update_lua_mem(true)
+
+      if kong.configuration.role == "control_plane" then
+        return
+      end
+
+      events.register_events(reconfigure_handler)
+
+      -- initialize balancers for active healthchecks
+      timer_at(0, function()
+        balancer.init()
+      end)
+
+      local strategy = kong.db.strategy
+
+      do
+        local rebuild_timeout = 60
+
+        if strategy == "postgres" then
+          rebuild_timeout = kong.configuration.pg_timeout / 1000
+        end
+
+        if strategy == "off" then
+          RECONFIGURE_OPTS = {
+            name = "reconfigure",
+            timeout = rebuild_timeout,
+          }
+
+        elseif kong.configuration.worker_consistency == "strict" then
+          ROUTER_SYNC_OPTS = {
+            name = "router",
+            timeout = rebuild_timeout,
+            on_timeout = "run_unlocked",
+          }
+
+          PLUGINS_ITERATOR_SYNC_OPTS = {
+            name = "plugins_iterator",
+            timeout = rebuild_timeout,
+            on_timeout = "run_unlocked",
+          }
+
+          WASM_STATE_SYNC_OPTS = {
+            name = "wasm",
+            timeout = rebuild_timeout,
+            on_timeout = "run_unlocked",
+          }
+        end
+      end
+
+      if strategy ~= "off" then
+        local worker_state_update_frequency = kong.configuration.worker_state_update_frequency or 1
+
+        local function rebuild_timer(premature)
+          if premature then
+            return
+          end
+
+          local router_update_status, err = rebuild_router({
+            name = "router",
+            timeout = 0,
+            on_timeout = "return_true",
+          })
+          if not router_update_status then
+            log(ERR, "could not rebuild router via timer: ", err)
+          end
+
+          local plugins_iterator_update_status, err = rebuild_plugins_iterator({
+            name = "plugins_iterator",
+            timeout = 0,
+            on_timeout = "return_true",
+          })
+          if not plugins_iterator_update_status then
+            log(ERR, "could not rebuild plugins iterator via timer: ", err)
+          end
+
+          if wasm.enabled() then
+            local wasm_update_status, err = rebuild_wasm_state({
+              name = "wasm",
+              timeout = 0,
+              on_timeout = "return_true",
+            })
+            if not wasm_update_status then
+              log(ERR, "could not rebuild wasm filter chains via timer: ", err)
+            end
+          end
+        end
+
+        local _, err = kong.timer:named_every("rebuild",
+                                         worker_state_update_frequency,
+                                         rebuild_timer)
+        if err then
+          log(ERR, "could not schedule timer to rebuild: ", err)
+        end
+      end
+    end,
+  }
 }
