@@ -5,6 +5,8 @@ return {
     "cache",
     "plugins_iterator",
     "workspaces",
-    -- "restful",
+    "restful",
     -- "proxy",
+    -- "clustering",
+    -- "observability",
 }

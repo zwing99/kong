@@ -382,6 +382,7 @@ local function execute(balancer_data, ctx)
 
   balancer_data.ip   = ip
   balancer_data.port = port
+
   if upstream and upstream.host_header ~= nil then
     balancer_data.hostname = upstream.host_header
   else

@@ -120,7 +120,7 @@ function Runtime.register_phase_handler(name, phase, fn_enter, fn_exit, deps, op
 
   handlers.dependencies[name] = component_dep
 
-  return true
+  return true                       
 end
 
 
@@ -141,7 +141,7 @@ function Runtime.execute_phase(phase)
     return true
   end
 
-  if phase ~= "init" then
+  if phase ~= "init" and phase ~= "admin_content" and phase ~= "admin_header_filter" then
     local ctx = ngx.ctx
     ctx.KONG_PHASE = PHASES[phase]
   end
@@ -187,11 +187,11 @@ function Runtime.init_worker()
 end
 
 function Runtime.balancer()
-  return require("kong").balancer()
+  assert(Runtime.execute_phase("balancer"))
 end
 
 function Runtime.ssl_certificate()
-  return require("kong").ssl_certificate()
+  assert(Runtime.execute_phase("ssl_certificate"))
 end
 
 function Runtime.rewrite()
@@ -219,23 +219,23 @@ function Runtime.handle_error()
 end
 
 function Runtime.admin_content()
-  return require("kong").admin_content()
+  assert(Runtime.execute_phase("admin_content"))
 end
 
 function Runtime.admin_header_filter()
-  return require("kong").admin_header_filter()
+  assert(Runtime.execute_phase("admin_header_filter"))
 end 
 
 function Runtime.status_content()
-  return require("kong").status_content()
+  --return require("kong").status_content()
 end
 
 function Runtime.status_header_filter()
-  return require("kong").status_header_filter()
+  --return require("kong").status_header_filter()
 end
 
 function Runtime.serve_cluster_listener()
-  return require("kong").serve_cluster_listener()
+  --return require("kong").serve_cluster_listener()
 end
 
 return Runtime

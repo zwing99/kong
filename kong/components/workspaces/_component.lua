@@ -2,7 +2,7 @@ local Runtime = require "kong.components.runtime"
 
 local function init_enter()
   local default_ws = kong.db.workspaces:select_by_name("default")
-  Runtime.register_globals("default_workspace", default_ws or default_ws.id)
+  Runtime.register_globals("default_workspace", default_ws and default_ws.id)
 
   return true
 end
