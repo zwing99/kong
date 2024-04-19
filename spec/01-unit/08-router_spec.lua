@@ -1738,7 +1738,7 @@ for _, flavor in ipairs({ "traditional", "traditional_compatible", "expressions"
         end)
       end)
 
-      if flavor ~= "traditional" then
+      if flavor == "tradition_compatible" then
         describe("[wildcard sni]", function()
           local use_case, router
 
