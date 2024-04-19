@@ -1769,6 +1769,9 @@ for _, flavor in ipairs({ "traditional", "traditional_compatible", "expressions"
                                             sni)
               assert.truthy(match_t)
               assert.same(use_case[1].route, match_t.route)
+              if flavor == "traditional" then
+                assert.same(use_case[1].route.snis[1], match_t.matches.sni)
+              end
               assert.same(nil, match_t.matches.method)
               assert.same(nil, match_t.matches.uri)
               assert.same(nil, match_t.matches.uri_captures)
@@ -1781,6 +1784,9 @@ for _, flavor in ipairs({ "traditional", "traditional_compatible", "expressions"
                                             sni)
               assert.truthy(match_t)
               assert.same(use_case[2].route, match_t.route)
+              if flavor == "traditional" then
+                assert.same(use_case[2].route.snis[1], match_t.matches.sni)
+              end
             end
           end)
 
@@ -1792,7 +1798,7 @@ for _, flavor in ipairs({ "traditional", "traditional_compatible", "expressions"
             end
           end)
         end)
-      end -- if flavor ~= "traditional" then
+      end
 
 
       if flavor ~= "traditional" then
