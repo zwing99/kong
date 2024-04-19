@@ -20,9 +20,9 @@ $luarocks_exec install "luarocks $luarocks_version"
 
 # use host configuration to invoke luarocks API to wrap a correct bin/luarocks script
 rocks_tree=$workspace_path/$(dirname $luarocks_exec)/luarocks_tree
-host_luajit=$workspace_path/$luajit_path/bin/luajit
+host_luajit=$workspace_path/$luajit_path/../bin/luajit
 
-host_luarocks_tree=$luarocks_host_path
+host_luarocks_tree=$luarocks_host_path/../
 export LUA_PATH="$build_destdir/share/lua/5.1/?.lua;$build_destdir/share/lua/5.1/?/init.lua;$host_luarocks_tree/share/lua/5.1/?.lua;$host_luarocks_tree/share/lua/5.1/?/init.lua;;"
 
 ROCKS_CONFIG="luarocks_make_config.lua"

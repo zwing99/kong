@@ -34,7 +34,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
      YAML_DIR=$(HOME=~$(whoami) PATH=/opt/homebrew/bin:$PATH brew --prefix)/opt/libyaml
 elif [[ -d $cross_deps_libyaml_path ]]; then
     # TODO: is there a good way to use locations but doesn't break non-cross builds?
-    YAML_DIR=$root_path/$cross_deps_libyaml_path
+    YAML_DIR=$root_path/$cross_deps_libyaml_path/../
 else
     YAML_DIR=/usr
 fi
@@ -59,9 +59,9 @@ variables = {
 }
 " > $ROCKS_CONFIG
 
-LUAROCKS_HOST=$luarocks_host_path
+LUAROCKS_HOST=$luarocks_host_path/../
 
-host_luajit=$root_path/$luajit_path/bin/luajit
+host_luajit=$root_path/$luajit_path/../bin/luajit
 
 cat << EOF > $@
 LIB_RPATH=$LIB_RPATH
