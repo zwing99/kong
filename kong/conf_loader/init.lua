@@ -317,7 +317,7 @@ local function load(path, custom_conf, opts)
         return nil, err
       end
 
-      for k, v in pairs(env_vars) do
+      for k in pairs(env_vars) do
         local kong_var = match(lower(k), "^kong_(.+)")
         if kong_var then
           -- the value will be read in `overrides()`
@@ -403,8 +403,8 @@ local function load(path, custom_conf, opts)
     -- collect references
     local is_reference = require "kong.pdk.vault".is_reference
     for k, v in pairs(conf) do
-      local typ = (conf_constants.CONF_PARSERS[k] or {}).typ or "string"
-      v = parse_value(v, typ)
+      local typ = (conf_constants.CONF_PARSERS[k] or {}).typ
+      v = parse_value(v, typ == "array" and "array" or "string")
       if typ == "array" then
         local found
 
