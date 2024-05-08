@@ -104,7 +104,7 @@ end
 
 local function get_token_text(event_t)
   -- chat
-  return
+  local text =
     event_t and
     event_t.choices and
     #event_t.choices > 0 and
@@ -120,6 +120,9 @@ local function get_token_text(event_t)
     event_t.choices[1].text
 
     or ""
+
+  -- sometimes user send/receive 'cjson.null' userdata, or random json object
+  return (type(text) == "string" and text) or ""
 end
 
 local function handle_streaming_frame(conf)
@@ -345,7 +348,7 @@ function _M:body_filter(conf)
 
     local ai_driver = require("kong.llm.drivers." .. conf.model.provider)
     local new_response_string, err = ai_driver.from_format(response_body, conf.model, route_type)
-    
+
     if err then
       kong.log.warn("issue when transforming the response body for analytics in the body filter phase, ", err)
     elseif new_response_string then
@@ -429,6 +432,13 @@ function _M:access(conf)
     conf_m.model.name = request_table.model
   elseif multipart then
     conf_m.model.name = "NOT_SPECIFIED"
+  end
+
+  -- check that the user isn't trying to override the plugin conf model in the request body
+  if request_table and request_table.model and type(request_table.model) == "string" then
+    if request_table.model ~= conf_m.model.name then
+      return bad_request("cannot use own model - must be: " .. conf_m.model.name)
+    end
   end
 
   -- model is stashed in the copied plugin conf, for consistency in transformation functions

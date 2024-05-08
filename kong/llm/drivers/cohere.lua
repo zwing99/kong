@@ -400,11 +400,6 @@ function _M.post_request(conf)
 end
 
 function _M.pre_request(conf, body)
-  -- check for user trying to bring own model
-  if body and body.model then
-    return false, "cannot use own model for this instance"
-  end
-
   return true, nil
 end
 
@@ -467,7 +462,7 @@ end
 function _M.configure_request(conf)
   local parsed_url
 
-  if conf.model.options.upstream_url then
+  if conf.model.options and conf.model.options.upstream_url then
     parsed_url = socket_url.parse(conf.model.options.upstream_url)
   else
     parsed_url = socket_url.parse(ai_shared.upstream_url_format[DRIVER_NAME])
@@ -476,10 +471,6 @@ function _M.configure_request(conf)
                       or ai_shared.operation_map[DRIVER_NAME][conf.route_type]
                       and ai_shared.operation_map[DRIVER_NAME][conf.route_type].path
                       or "/"
-
-    if not parsed_url.path then
-      return false, fmt("operation %s is not supported for cohere provider", conf.route_type)
-    end
   end
   
   -- if the path is read from a URL capture, ensure that it is valid

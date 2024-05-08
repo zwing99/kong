@@ -160,10 +160,10 @@ _M.clear_response_headers = {
 -- @return {string} error if any is thrown - request should definitely be terminated if this is not nil
 function _M.merge_config_defaults(request, options, request_format)
   if options then
-    request.temperature = request.temperature or options.temperature
-    request.max_tokens = request.max_tokens or options.max_tokens
-    request.top_p = request.top_p or options.top_p
-    request.top_k = request.top_k or options.top_k
+    request.temperature = options.temperature or request.temperature
+    request.max_tokens = options.max_tokens or request.max_tokens 
+    request.top_p = options.top_p or request.top_p
+    request.top_k = options.top_k or request.top_k
   end
 
   return request, nil
@@ -672,8 +672,10 @@ local function count_words(str)
   end
 
   local count = 0
-  for word in str:gmatch("%S+") do
-      count = count + 1
+  if type(str) == "string" then
+    for word in str:gmatch("%S+") do
+        count = count + 1
+    end
   end
   return count
 end
