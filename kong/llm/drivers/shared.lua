@@ -48,6 +48,7 @@ _M.streaming_has_token_counts = {
   ["cohere"] = true,
   ["llama2"] = true,
   ["anthropic"] = true,
+  ["gemini"] = true,
 }
 
 _M.upstream_url_format = {
@@ -209,44 +210,62 @@ end
 -- as if it were an SSE message.
 --
 -- @param {string} frame input string to format into SSE events
--- @param {string} delimiter delimeter (can be complex string) to split by
+-- @param {boolean} raw_json sets application/json byte-parser mode
 -- @return {table} n number of split SSE messages, or empty table
-function _M.frame_to_events(frame)
+function _M.frame_to_events(frame, raw_json_mode)
   local events = {}
 
-  if (not frame) or #frame < 1 then
+  if (not frame) or (#frame < 1) or (type(frame)) ~= "string" then
     return
   end
 
-  -- check if it's raw json and just return the split up data frame
-  if string.sub(str_ltrim(frame), 1, 1) == "{" then
-    for event in frame:gmatch("[^\r\n]+") do
-      events[#events + 1] = {
-        data = event,
-      }
+  -- some new LLMs return the JSON object-by-object,
+  -- because that totally makes sense to parse?!
+  if raw_json_mode then
+    -- if this is the first frame, it will begin with array opener '['
+    frame = (string.sub(str_ltrim(frame), 1, 1) == "[" and string.sub(str_ltrim(frame), 2)) or frame
+
+    -- it may start with ',' which is the start of the new frame
+    frame = (string.sub(str_ltrim(frame), 1, 1) == "," and string.sub(str_ltrim(frame), 2)) or frame
+    
+    -- finally, it may end with the array terminator ']' indicating the finished stream
+    frame = (string.sub(str_ltrim(frame), -1) == "]" and string.sub(str_ltrim(frame), 1, -2)) or frame
+
+    -- for multiple events that arrive in the same frame, split by top-level comma
+    for _, v in ipairs(split(frame, "\n,")) do
+      events[#events+1] = { data = v }
     end
   else
-    local event_lines = split(frame, "\n")
-    local struct = { event = nil, id = nil, data = nil }
-
-    for _, dat in ipairs(event_lines) do
-      if #dat < 1 then
-        events[#events + 1] = struct
-        struct = { event = nil, id = nil, data = nil }
+    -- check if it's raw json and just return the split up data frame
+    if string.sub(str_ltrim(frame), 1, 1) == "{" then
+      for event in frame:gmatch("[^\r\n]+") do
+        events[#events + 1] = {
+          data = event,
+        }
       end
+    else
+      local event_lines = split(frame, "\n")
+      local struct = { event = nil, id = nil, data = nil }
 
-      local s1, _ = str_find(dat, ":") -- find where the cut point is
+      for _, dat in ipairs(event_lines) do
+        if #dat < 1 then
+          events[#events + 1] = struct
+          struct = { event = nil, id = nil, data = nil }
+        end
 
-      if s1 and s1 ~= 1 then
-        local field = str_sub(dat, 1, s1-1) -- returns "data " from data: hello world
-        local value = str_ltrim(str_sub(dat, s1+1)) -- returns "hello world" from data: hello world
+        local s1, _ = str_find(dat, ":") -- find where the cut point is
 
-        -- for now not checking if the value is already been set
-        if     field == "event" then struct.event = value
-        elseif field == "id"    then struct.id = value
-        elseif field == "data"  then struct.data = value
+        if s1 and s1 ~= 1 then
+          local field = str_sub(dat, 1, s1-1) -- returns "data " from data: hello world
+          local value = str_ltrim(str_sub(dat, s1+1)) -- returns "hello world" from data: hello world
+
+          -- for now not checking if the value is already been set
+          if     field == "event" then struct.event = value
+          elseif field == "id"    then struct.id = value
+          elseif field == "data"  then struct.data = value
+          end -- if
         end -- if
-      end -- if
+      end
     end
   end
   
