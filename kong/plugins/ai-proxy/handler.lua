@@ -10,6 +10,14 @@ local buffer = require "string.buffer"
 local strip = require("kong.tools.utils").strip
 --
 
+-- cloud auth/sdk providers
+local GCP_SERVICE_ACCOUNT do
+  GCP_SERVICE_ACCOUNT = os.getenv("GCP_SERVICE_ACCOUNT")
+end
+
+local GCP = require("resty.gcp.request.credentials.accesstoken")
+--
+
 
 _M.PRIORITY = 770
 _M.VERSION = kong_meta.version
@@ -18,6 +26,30 @@ _M.VERSION = kong_meta.version
 -- reuse this table for error message response
 local ERROR_MSG = { error = { message = "" } }
 
+
+local _KEYBASTION = setmetatable({}, {
+  __mode = "k",
+  __index = function(this_cache, plugin_config)
+    if plugin_config.model.provider == "gemini" and
+       plugin_config.auth and
+       plugin_config.auth.gcp_use_service_account then
+
+      ngx.log(ngx.NOTICE, "loading gcp sdk for plugin ", kong.plugin.get_id())
+
+      local service_account_json = (plugin_config.auth and plugin_config.auth.gcp_service_account_json) or GCP_SERVICE_ACCOUNT
+
+      local ok, gcp_auth = pcall(GCP.new, nil, service_account_json)
+      if ok and gcp_auth then
+        -- store our item for the next time we need it
+        gcp_auth.service_account_json = service_account_json
+        this_cache[plugin_config] = { interface = gcp_auth, error = nil }
+        return this_cache[plugin_config]
+      end
+
+      return { interface = nil, error = "cloud-authentication with GCP failed" }
+    end
+  end,
+})
 
 local function bad_request(msg)
   kong.log.warn(msg)
@@ -81,6 +113,19 @@ local function handle_streaming_frame(conf)
     end
 
     local events = ai_shared.frame_to_events(chunk)
+
+    if not events then
+      local response = 'data: {"error": true, "message": "empty transformer response"}'
+      
+      if is_gzip then
+        response = kong_utils.deflate_gzip(response)
+      end
+
+      ngx.arg[1] = response
+      ngx.arg[2] = true
+
+      return
+    end
 
     for _, event in ipairs(events) do
       local formatted, _, metadata = ai_driver.from_format(event, conf.model, "stream/" .. conf.route_type)
@@ -327,7 +372,7 @@ function _M:access(conf)
 
     if not request_table then
       if not string.find(content_type, "multipart/form-data", nil, true) then
-        return bad_request("content-type header does not match request body")
+        return bad_request("content-type header does not match request body, or bad JSON formatting")
       end
 
       multipart = true  -- this may be a large file upload, so we have to proxy it directly
@@ -422,11 +467,22 @@ function _M:access(conf)
     kong.service.request.set_body(parsed_request_body, content_type)
   end
 
+  -- get the provider's cached identity interface - nil may come back, which is fine
+  local identity_interface = _KEYBASTION[conf]
+  if identity_interface.error then
+    kong.ctx.shared.skip_response_transformer = true
+    kong.log.err("error authenticating with cloud-provider, ", identity_interface.error)
+
+    return internal_server_error("LLM request failed before proxying")
+  end
+
   -- now re-configure the request for this operation type
-  local ok, err = ai_driver.configure_request(conf_m)
+  local ok, err = ai_driver.configure_request(conf_m, identity_interface.interface)
   if not ok then
     kong.ctx.shared.skip_response_transformer = true
-    return internal_server_error(err)
+    kong.log.err("error whilst configuring LLM request, ", err)
+
+    return internal_server_error("LLM request failed before proxying")
   end
 
   -- lights out, and away we go
