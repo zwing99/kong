@@ -73,7 +73,21 @@ local auth_schema = {
                       "environment variable `GCP_SERVICE_ACCOUNT`.",
         required = false,
         referenceable = true }},
-  }
+    { aws_access_key_id = {
+        type = "string",
+        description = "Set this if you are using an AWS provider (Bedrock, SageMaker) and you are authenticating " ..
+                      "using static IAM User credentials.",
+        required = false,
+        encrypted = true,
+        referenceable = true }},
+    { aws_secret_access_key = {
+        type = "string",
+        description = "Set this if you are using an AWS provider (Bedrock, SageMaker) and you are authenticating " ..
+                      "using static IAM User credentials.",
+        required = false,
+        encrypted = true,
+        referenceable = true }},
+  },
 }
 
 local model_options_schema = {
@@ -103,7 +117,7 @@ local model_options_schema = {
         between = { 0, 500 }}},
     { anthropic_version = {
         type = "string",
-        description = "Defines the schema/API version, if using Anthropic provider.",
+        description = "Defines the schema/API version, if using Anthropic provider and/or models.",
         required = false }},
     { azure_instance = {
         type = "string",
@@ -138,6 +152,11 @@ local model_options_schema = {
         type = "string",
         required = false }},
     { gemini = gemini_options_schema },
+    { aws_region = {
+        description = "If using AWS providers (Bedrock, SageMaker) you can override the `AWS_REGION` " ..
+                      "environment variable by setting this option.",
+        type = "string",
+        required = false }},
   }
 }
 
@@ -149,7 +168,7 @@ local model_schema = {
         type = "string", description = "AI provider request format - Kong translates "
                                     .. "requests to and from the specified backend compatible formats.",
         required = true,
-        one_of = { "openai", "azure", "anthropic", "cohere", "mistral", "llama2", "gemini" }}},
+        one_of = { "openai", "azure", "anthropic", "cohere", "mistral", "llama2", "gemini", "bedrock" }}},
     { name = {
         type = "string",
         description = "Model name to execute.",
