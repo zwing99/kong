@@ -1125,6 +1125,7 @@ function DAO:each_for_export(size, options)
     options.export = true
   end
 
+  options.hide_shorthands = true
   return self:each(size, options)
 end
 
