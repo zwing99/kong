@@ -1,6 +1,6 @@
 local Router
 local path_handling_tests = require "spec.fixtures.router_path_handling_tests"
-local uuid = require("kong.tools.utils").uuid
+local uuid = require("kong.tools.uuid").uuid
 local get_expression = require("kong.router.transform").get_expression
 local deep_copy = require("kong.tools.table").deep_copy
 
@@ -3482,6 +3482,26 @@ for _, flavor in ipairs({ "traditional", "traditional_compatible", "expressions"
         end
         assert.is_nil(match_t.matches.method)
         assert.is_nil(match_t.matches.headers)
+      end)
+
+      it("uri_captures works well with the optional capture group. Fix #13014", function()
+        local use_case = {
+          {
+            service = service,
+            route   = {
+              id = "e8fb37f1-102d-461e-9c51-6608a6bb8101",
+              paths = { [[~/(users/)?1984/(?<subpath>profile)$]] },
+            },
+          },
+        }
+
+        local router = assert(new_router(use_case))
+        local _ngx = mock_ngx("GET", "/1984/profile", { host = "domain.org" })
+        router._set_ngx(_ngx)
+        local match_t = router:exec()
+        assert.falsy(match_t.matches.uri_captures[1])
+        assert.equal("profile", match_t.matches.uri_captures.subpath)
+        assert.is_nil(match_t.matches.uri_captures.scope)
       end)
 
       it("returns uri_captures from a [uri regex]", function()
