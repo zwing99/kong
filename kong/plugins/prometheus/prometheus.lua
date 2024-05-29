@@ -104,6 +104,15 @@ local METRICS_KEY_REGEX = [[(.*[,{]le=")(.*)(".*)]]
 local METRIC_NAME_REGEX = [[^[a-z_:][a-z0-9_:]*$]]
 local LABEL_NAME_REGEX  = [[^[a-z_][a-z0-9_]*$]]
 
+local ERR_MSG_COUNTER_NOT_INITIALIZED = "counter not initialized! " ..
+  "Have you called Prometheus:init() from the " ..
+  "init_worker_by_lua_block nginx phase?"
+
+-- Error message that gets logged when the shared dictionary gets full.
+local ERR_MSG_LRU_EVICTION = "Shared dictionary used for prometheus metrics " ..
+  "is full. REPORTED METRIC DATA MIGHT BE INCOMPLETE. Please increase the " ..
+  "size of the dictionary or reduce metric cardinality."
+
 -- Accepted range of byte values for tailing bytes of utf8 strings.
 -- This is defined outside of the validate_utf8_string function as a const
 -- variable to avoid creating and destroying table frequently.
@@ -170,6 +179,22 @@ local function validate_utf8_string(str)
   return true
 end
 
+-- Return label values table as a string for debugging purposes
+local function labels_to_string(t)
+  if t == nil then
+    return "nil"
+  end
+
+  local buf = "<"
+  for i = 1, #t do
+    buf = buf .. tostring(t[i])
+    if i < #t then
+      buf = buf .. ","
+    end
+  end
+  return buf .. ">"
+end
+
 -- Generate full metric name that includes all labels.
 --
 -- Args:
@@ -203,6 +228,8 @@ local function full_metric_name(name, label_names, label_values)
       if not valid then
         label_value = string.sub(label_value, 1, pos - 1)
       end
+
+      -- fixme: use smarter regexp
 
       if string.find(label_value, slash, 1, true) then
         label_value = ngx_re_gsub(label_value, reg_slash, double_slash, "jo")
@@ -377,8 +404,9 @@ local function lookup_or_create(self, label_values)
   local cnt = label_values and #label_values or 0
   -- specially, if first element is nil, # will treat it as "non-empty"
   if cnt ~= self.label_count or (self.label_count > 0 and label_values[1] == nil) then
-    return nil, string.format("inconsistent labels count, expected %d, got %d",
-                              self.label_count, cnt)
+    return nil, string.format(
+      "incorrect label count for metric %s, expected %d, got %d (%s)",
+      self.name, self.label_count, cnt, labels_to_string(label_values))
   end
   local t = self.lookup
   if label_values then
@@ -446,7 +474,7 @@ end
 --   value: numeric value to increment by. Can be negative.
 --   label_values: a list of label values, in the same order as label keys.
 local function inc_gauge(self, value, label_values)
-  local k, err, _
+  local k, err, _, evicted
   k, err = lookup_or_create(self, label_values)
   if err then
     self._log_error(err)
@@ -459,15 +487,11 @@ local function inc_gauge(self, value, label_values)
     return
   end
 
-  _, err, _ = self._dict:incr(k, value, 0)
-  if err then
-    self._log_error_kv(k, value, err)
+  _, err, evicted = self._dict:incr(k, value, 0)
+  if err or evicted then
+    self._log_error_kv(k, value, err or ERR_MSG_LRU_EVICTION)
   end
 end
-
-local ERR_MSG_COUNTER_NOT_INITIALIZED = "counter not initialized! " ..
-  "Have you called Prometheus:init() from the " ..
-  "init_worker_by_lua_block nginx phase?"
 
 -- Increment a counter metric.
 --
@@ -485,7 +509,7 @@ local function inc_counter(self, value, label_values)
     return
   end
 
-  local k, err
+  local k, err, evicted
   k, err = lookup_or_create(self, label_values)
   if err then
     self._log_error(err)
@@ -501,7 +525,10 @@ local function inc_counter(self, value, label_values)
     end
     self._counter = c
   end
-  c:incr(k, value)
+  _, err, evicted = self._dict:incr(k, value)
+  if err or evicted then
+    self._log_error_kv(k, value, err or ERR_MSG_LRU_EVICTION)
+  end
 end
 
 -- Delete a counter or a gauge metric.
@@ -565,7 +592,7 @@ local function set(self, value, label_values)
     return
   end
 
-  _, err = self._dict:safe_set(k, value)
+  _, err = self._dict:set(k, value)
   if err then
     self._log_error_kv(k, value, err)
   end
@@ -605,6 +632,9 @@ local function observe(self, value, label_values)
   -- _sum metric.
   c:incr(keys[2], value)
 
+  -- the last bucket (le="Inf").
+  c:incr(keys[self.bucket_count+3], 1)
+
   local seen = false
   -- check in reverse order, otherwise we will always
   -- need to traverse the whole table.
@@ -616,8 +646,6 @@ local function observe(self, value, label_values)
       break
     end
   end
-  -- the last bucket (le="Inf").
-  c:incr(keys[self.bucket_count+3], 1)
 end
 
 -- Delete all metrics for a given gauge, counter or a histogram.
@@ -670,7 +698,8 @@ local function reset(self)
         end
       end
       if remove then
-        local _, err = self._dict:safe_set(key, nil)
+        local _
+        _, err = self._dict:safe_set(key, nil)
         if err then
           self._log_error("Error resetting '", key, "': ", err)
         end
@@ -932,7 +961,7 @@ function Prometheus:metric_data(write_fn, local_only)
   end
 
   local count = #keys
-  for k, v in pairs(self.local_metrics) do
+  for k, _ in pairs(self.local_metrics) do
     keys[count+1] = k
     count = count + 1
   end
