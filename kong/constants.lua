@@ -43,6 +43,7 @@ local plugins = {
   "ai-request-transformer",
   "ai-response-transformer",
   "standard-webhooks",
+  "opentelemetry2"
 }
 
 local plugin_map = {}

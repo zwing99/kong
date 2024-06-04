@@ -1,0 +1,22 @@
+{
+  "name": "telemetry-server",
+  "version": "1.0.0",
+  "description": "Kong Gateway Telemetry Server PoC",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "nodemon src/main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@opentelemetry/api": "^1.8.0",
+    "@opentelemetry/exporter-prometheus": "^0.51.1",
+    "@opentelemetry/sdk-metrics": "^1.24.1",
+    "@opentelemetry/sdk-trace-node": "^1.24.1",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.2"
+  }
+}
