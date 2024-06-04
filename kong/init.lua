@@ -97,6 +97,7 @@ local pl_file = require "pl.file"
 local req_dyn_hook = require "kong.dynamic_hook"
 local uuid = require("kong.tools.uuid").uuid
 local kong_time = require("kong.tools.time")
+local buffer = require("string.buffer")
 
 
 local kong             = kong
@@ -146,6 +147,22 @@ local DECLARATIVE_LOAD_KEY = constants.DECLARATIVE_LOAD_KEY
 local CTX_NS = "ctx"
 local CTX_NARR = 0
 local CTX_NREC = 50 -- normally Kong has ~32 keys in ctx
+
+
+local DEFAULT_TRACE_BUFFER_SIZE = 4096
+
+
+local function set_ctx(ctx, key, value)
+  local trace_buffer = ctx.trace_buffer
+  if not trace_buffer then
+    trace_buffer = buffer.new(DEFAULT_TRACE_BUFFER_SIZE)
+    ctx.trace_buffer = trace_buffer
+  end
+
+  trace_buffer:put(key .. ' ' .. tostring(value) .. '\n')
+
+  ctx[key] = value
+end
 
 
 local declarative_entities
@@ -1037,11 +1054,11 @@ end
 function Kong.preread()
   local ctx = get_ctx_table(fetch_table(CTX_NS, CTX_NARR, CTX_NREC))
   if not ctx.KONG_PROCESSING_START then
-    ctx.KONG_PROCESSING_START = get_start_time_ms()
+    set_ctx(ctx, "KONG_PROCESSING_START", get_start_time_ms())
   end
 
   if not ctx.KONG_PREREAD_START then
-    ctx.KONG_PREREAD_START = get_now_ms()
+    set_ctx(ctx, "KONG_PREREAD_START", get_now_ms())
   end
 
   ctx.KONG_PHASE = PHASES.preread
@@ -1060,7 +1077,7 @@ function Kong.preread()
   execute_collecting_plugins_iterator(plugins_iterator, "preread", ctx)
 
   if ctx.delayed_response then
-    ctx.KONG_PREREAD_ENDED_AT = get_updated_now_ms()
+    set_ctx(ctx, "KONG_PREREAD_ENDED_AT", get_updated_now_ms())
     ctx.KONG_PREREAD_TIME = ctx.KONG_PREREAD_ENDED_AT - ctx.KONG_PREREAD_START
     ctx.KONG_RESPONSE_LATENCY = ctx.KONG_PREREAD_ENDED_AT - ctx.KONG_PROCESSING_START
 
@@ -1070,7 +1087,7 @@ function Kong.preread()
   ctx.delay_response = nil
 
   if not ctx.service then
-    ctx.KONG_PREREAD_ENDED_AT = get_updated_now_ms()
+    set_ctx(ctx, "KONG_PREREAD_ENDED_AT", get_updated_now_ms())
     ctx.KONG_PREREAD_TIME = ctx.KONG_PREREAD_ENDED_AT - ctx.KONG_PREREAD_START
     ctx.KONG_RESPONSE_LATENCY = ctx.KONG_PREREAD_ENDED_AT - ctx.KONG_PROCESSING_START
 
@@ -1080,7 +1097,7 @@ function Kong.preread()
 
   runloop.preread.after(ctx)
 
-  ctx.KONG_PREREAD_ENDED_AT = get_updated_now_ms()
+  set_ctx(ctx, "KONG_PREREAD_ENDED_AT", get_updated_now_ms())
   ctx.KONG_PREREAD_TIME = ctx.KONG_PREREAD_ENDED_AT - ctx.KONG_PREREAD_START
 
   -- we intent to proxy, though balancer may fail on that
@@ -1095,7 +1112,7 @@ function Kong.rewrite()
     local ctx = ngx.ctx           -- after an internal redirect. Restore (and restash)
     kong_resty_ctx.stash_ref(ctx) -- context to avoid re-executing phases
 
-    ctx.KONG_REWRITE_ENDED_AT = get_now_ms()
+    set_ctx(ctx, "KONG_REWRITE_ENDED_AT", get_now_ms())
     ctx.KONG_REWRITE_TIME = ctx.KONG_REWRITE_ENDED_AT - ctx.KONG_REWRITE_START
 
     return
@@ -1110,11 +1127,11 @@ function Kong.rewrite()
   end
 
   if not ctx.KONG_PROCESSING_START then
-    ctx.KONG_PROCESSING_START = get_start_time_ms()
+    set_ctx(ctx, "KONG_PROCESSING_START", get_start_time_ms())
   end
 
   if not ctx.KONG_REWRITE_START then
-    ctx.KONG_REWRITE_START = get_now_ms()
+    set_ctx(ctx, "KONG_REWRITE_START", get_now_ms())
   end
 
   ctx.KONG_PHASE = PHASES.rewrite
@@ -1153,7 +1170,7 @@ function Kong.rewrite()
 
   execute_global_plugins_iterator(plugins_iterator, "rewrite", ctx)
 
-  ctx.KONG_REWRITE_ENDED_AT = get_updated_now_ms()
+  set_ctx(ctx, "KONG_REWRITE_ENDED_AT", get_updated_now_ms())
   ctx.KONG_REWRITE_TIME = ctx.KONG_REWRITE_ENDED_AT - ctx.KONG_REWRITE_START
 
   if has_timing then
@@ -1171,10 +1188,10 @@ function Kong.access()
   end
 
   if not ctx.KONG_ACCESS_START then
-    ctx.KONG_ACCESS_START = get_now_ms()
+    set_ctx(ctx, "KONG_ACCESS_START", get_now_ms())
 
     if ctx.KONG_REWRITE_START and not ctx.KONG_REWRITE_ENDED_AT then
-      ctx.KONG_REWRITE_ENDED_AT = ctx.KONG_ACCESS_START
+      set_ctx(ctx, "KONG_REWRITE_ENDED_AT", ctx.KONG_ACCESS_START)
       ctx.KONG_REWRITE_TIME = ctx.KONG_REWRITE_ENDED_AT - ctx.KONG_REWRITE_START
     end
   end
@@ -1188,7 +1205,7 @@ function Kong.access()
   execute_collecting_plugins_iterator(plugins_iterator, "access", ctx)
 
   if ctx.delayed_response then
-    ctx.KONG_ACCESS_ENDED_AT = get_updated_now_ms()
+    set_ctx(ctx, "KONG_ACCESS_ENDED_AT", get_updated_now_ms())
     ctx.KONG_ACCESS_TIME = ctx.KONG_ACCESS_ENDED_AT - ctx.KONG_ACCESS_START
     ctx.KONG_RESPONSE_LATENCY = ctx.KONG_ACCESS_ENDED_AT - ctx.KONG_PROCESSING_START
 
@@ -1202,7 +1219,7 @@ function Kong.access()
   ctx.delay_response = nil
 
   if not ctx.service then
-    ctx.KONG_ACCESS_ENDED_AT = get_updated_now_ms()
+    set_ctx(ctx, "KONG_ACCESS_ENDED_AT", get_updated_now_ms())
     ctx.KONG_ACCESS_TIME = ctx.KONG_ACCESS_ENDED_AT - ctx.KONG_ACCESS_START
     ctx.KONG_RESPONSE_LATENCY = ctx.KONG_ACCESS_ENDED_AT - ctx.KONG_PROCESSING_START
 
@@ -1218,7 +1235,7 @@ function Kong.access()
   runloop.wasm_attach(ctx)
   runloop.access.after(ctx)
 
-  ctx.KONG_ACCESS_ENDED_AT = get_updated_now_ms()
+  set_ctx(ctx, "KONG_ACCESS_ENDED_AT", get_updated_now_ms())
   ctx.KONG_ACCESS_TIME = ctx.KONG_ACCESS_ENDED_AT - ctx.KONG_ACCESS_START
 
   -- we intent to proxy, though balancer may fail on that
@@ -1264,25 +1281,25 @@ function Kong.balancer()
   local now_ns = time_ns()
 
   if not ctx.KONG_BALANCER_START then
-    ctx.KONG_BALANCER_START = now_ms
+    set_ctx(ctx, "KONG_BALANCER_START", now_ms)
 
     if is_stream_module then
       if ctx.KONG_PREREAD_START and not ctx.KONG_PREREAD_ENDED_AT then
-        ctx.KONG_PREREAD_ENDED_AT = ctx.KONG_BALANCER_START
+        set_ctx(ctx, "KONG_PREREAD_ENDED_AT", ctx.KONG_BALANCER_START)
         ctx.KONG_PREREAD_TIME = ctx.KONG_PREREAD_ENDED_AT -
                                 ctx.KONG_PREREAD_START
       end
 
     else
       if ctx.KONG_REWRITE_START and not ctx.KONG_REWRITE_ENDED_AT then
-        ctx.KONG_REWRITE_ENDED_AT = ctx.KONG_ACCESS_START or
-                                    ctx.KONG_BALANCER_START
+        set_ctx(ctx, "KONG_REWRITE_ENDED_AT", ctx.KONG_ACCESS_START or
+                                    ctx.KONG_BALANCER_START)
         ctx.KONG_REWRITE_TIME = ctx.KONG_REWRITE_ENDED_AT -
                                 ctx.KONG_REWRITE_START
       end
 
       if ctx.KONG_ACCESS_START and not ctx.KONG_ACCESS_ENDED_AT then
-        ctx.KONG_ACCESS_ENDED_AT = ctx.KONG_BALANCER_START
+        set_ctx(ctx, "KONG_ACCESS_ENDED_AT", ctx.KONG_BALANCER_START)
         ctx.KONG_ACCESS_TIME = ctx.KONG_ACCESS_ENDED_AT -
                                ctx.KONG_ACCESS_START
       end
@@ -1333,7 +1350,7 @@ function Kong.balancer()
       ngx_log(ngx_ERR, "failed to retry the dns/balancer resolver for ",
               tostring(balancer_data.host), "' with: ", tostring(err))
 
-      ctx.KONG_BALANCER_ENDED_AT = get_updated_now_ms()
+      set_ctx(ctx, "KONG_BALANCER_ENDED_AT", get_updated_now_ms())
       ctx.KONG_BALANCER_TIME = ctx.KONG_BALANCER_ENDED_AT - ctx.KONG_BALANCER_START
       ctx.KONG_PROXY_LATENCY = ctx.KONG_BALANCER_ENDED_AT - ctx.KONG_PROCESSING_START
 
@@ -1400,7 +1417,7 @@ function Kong.balancer()
             tostring(balancer_data_ip), " port: ", tostring(balancer_data_port),
             "): ", tostring(err))
 
-    ctx.KONG_BALANCER_ENDED_AT = get_updated_now_ms()
+    set_ctx(ctx, "KONG_BALANCER_ENDED_AT", get_updated_now_ms())
     ctx.KONG_BALANCER_TIME = ctx.KONG_BALANCER_ENDED_AT - ctx.KONG_BALANCER_START
     ctx.KONG_PROXY_LATENCY = ctx.KONG_BALANCER_ENDED_AT - ctx.KONG_PROCESSING_START
 
@@ -1432,7 +1449,7 @@ function Kong.balancer()
   end
 
   -- record overall latency
-  ctx.KONG_BALANCER_ENDED_AT = get_updated_now_ms()
+  set_ctx(ctx, "KONG_BALANCER_ENDED_AT", get_updated_now_ms())
   ctx.KONG_BALANCER_TIME = ctx.KONG_BALANCER_ENDED_AT - ctx.KONG_BALANCER_START
 
   -- record try-latency
@@ -1513,10 +1530,10 @@ do
 
     -- fake response phase (this runs after the balancer)
     if not ctx.KONG_RESPONSE_START then
-      ctx.KONG_RESPONSE_START = get_now_ms()
+      set_ctx(ctx, "KONG_RESPONSE_START", get_now_ms())
 
       if ctx.KONG_BALANCER_START and not ctx.KONG_BALANCER_ENDED_AT then
-        ctx.KONG_BALANCER_ENDED_AT = ctx.KONG_RESPONSE_START
+        set_ctx(ctx, "KONG_BALANCER_ENDED_AT", ctx.KONG_RESPONSE_START)
         ctx.KONG_BALANCER_TIME = ctx.KONG_BALANCER_ENDED_AT -
           ctx.KONG_BALANCER_START
       end
@@ -1542,7 +1559,7 @@ do
 
     execute_collected_plugins_iterator(plugins_iterator, "response", ctx)
 
-    ctx.KONG_RESPONSE_ENDED_AT = get_updated_now_ms()
+    set_ctx(ctx, "KONG_RESPONSE_ENDED_AT", get_updated_now_ms())
     ctx.KONG_RESPONSE_TIME = ctx.KONG_RESPONSE_ENDED_AT - ctx.KONG_RESPONSE_START
 
     -- buffered response
@@ -1567,7 +1584,7 @@ function Kong.header_filter()
   end
 
   if not ctx.KONG_PROCESSING_START then
-    ctx.KONG_PROCESSING_START = get_start_time_ms()
+    set_ctx(ctx, "KONG_PROCESSING_START", get_start_time_ms())
   end
 
   if not ctx.workspace then
@@ -1575,34 +1592,34 @@ function Kong.header_filter()
   end
 
   if not ctx.KONG_HEADER_FILTER_START then
-    ctx.KONG_HEADER_FILTER_START = get_now_ms()
+    set_ctx(ctx, "KONG_HEADER_FILTER_START", get_now_ms())
 
     if ctx.KONG_REWRITE_START and not ctx.KONG_REWRITE_ENDED_AT then
-      ctx.KONG_REWRITE_ENDED_AT = ctx.KONG_BALANCER_START or
+      set_ctx(ctx, "KONG_REWRITE_ENDED_AT", ctx.KONG_BALANCER_START or
                                   ctx.KONG_ACCESS_START or
                                   ctx.KONG_RESPONSE_START or
-                                  ctx.KONG_HEADER_FILTER_START
+                                  ctx.KONG_HEADER_FILTER_START)
       ctx.KONG_REWRITE_TIME = ctx.KONG_REWRITE_ENDED_AT -
                               ctx.KONG_REWRITE_START
     end
 
     if ctx.KONG_ACCESS_START and not ctx.KONG_ACCESS_ENDED_AT then
-      ctx.KONG_ACCESS_ENDED_AT = ctx.KONG_BALANCER_START or
+      set_ctx(ctx, "KONG_ACCESS_ENDED_AT", ctx.KONG_BALANCER_START or
                                  ctx.KONG_RESPONSE_START or
-                                 ctx.KONG_HEADER_FILTER_START
+                                 ctx.KONG_HEADER_FILTER_START)
       ctx.KONG_ACCESS_TIME = ctx.KONG_ACCESS_ENDED_AT -
                              ctx.KONG_ACCESS_START
     end
 
     if ctx.KONG_BALANCER_START and not ctx.KONG_BALANCER_ENDED_AT then
-      ctx.KONG_BALANCER_ENDED_AT = ctx.KONG_RESPONSE_START or
-                                   ctx.KONG_HEADER_FILTER_START
+      set_ctx(ctx, "KONG_BALANCER_ENDED_AT", ctx.KONG_RESPONSE_START or
+                                   ctx.KONG_HEADER_FILTER_START)
       ctx.KONG_BALANCER_TIME = ctx.KONG_BALANCER_ENDED_AT -
                                ctx.KONG_BALANCER_START
     end
 
     if ctx.KONG_RESPONSE_START and not ctx.KONG_RESPONSE_ENDED_AT then
-      ctx.KONG_RESPONSE_ENDED_AT = ctx.KONG_HEADER_FILTER_START
+      set_ctx(ctx, "KONG_RESPONSE_ENDED_AT", ctx.KONG_HEADER_FILTER_START)
       ctx.KONG_RESPONSE_TIME = ctx.KONG_RESPONSE_ENDED_AT -
                                ctx.KONG_RESPONSE_START
     end
@@ -1631,7 +1648,7 @@ function Kong.header_filter()
   execute_collected_plugins_iterator(plugins_iterator, "header_filter", ctx)
   runloop.header_filter.after(ctx)
 
-  ctx.KONG_HEADER_FILTER_ENDED_AT = get_updated_now_ms()
+  set_ctx(ctx, "KONG_HEADER_FILTER_ENDED_AT", get_updated_now_ms())
   ctx.KONG_HEADER_FILTER_TIME = ctx.KONG_HEADER_FILTER_ENDED_AT - ctx.KONG_HEADER_FILTER_START
 
   if has_timing then
@@ -1649,44 +1666,44 @@ function Kong.body_filter()
   end
 
   if not ctx.KONG_BODY_FILTER_START then
-    ctx.KONG_BODY_FILTER_START = get_now_ms()
+    set_ctx(ctx, "KONG_BODY_FILTER_START", get_now_ms())
 
     if ctx.KONG_REWRITE_START and not ctx.KONG_REWRITE_ENDED_AT then
-      ctx.KONG_REWRITE_ENDED_AT = ctx.KONG_ACCESS_START or
+      set_ctx(ctx, "KONG_REWRITE_ENDED_AT", ctx.KONG_ACCESS_START or
                                   ctx.KONG_BALANCER_START or
                                   ctx.KONG_RESPONSE_START or
                                   ctx.KONG_HEADER_FILTER_START or
-                                  ctx.KONG_BODY_FILTER_START
+                                  ctx.KONG_BODY_FILTER_START)
       ctx.KONG_REWRITE_TIME = ctx.KONG_REWRITE_ENDED_AT -
                               ctx.KONG_REWRITE_START
     end
 
     if ctx.KONG_ACCESS_START and not ctx.KONG_ACCESS_ENDED_AT then
-      ctx.KONG_ACCESS_ENDED_AT = ctx.KONG_BALANCER_START or
+      set_ctx(ctx, "KONG_ACCESS_ENDED_AT", ctx.KONG_BALANCER_START or
                                  ctx.KONG_RESPONSE_START or
                                  ctx.KONG_HEADER_FILTER_START or
-                                 ctx.KONG_BODY_FILTER_START
+                                 ctx.KONG_BODY_FILTER_START)
       ctx.KONG_ACCESS_TIME = ctx.KONG_ACCESS_ENDED_AT -
                              ctx.KONG_ACCESS_START
     end
 
     if ctx.KONG_BALANCER_START and not ctx.KONG_BALANCER_ENDED_AT then
-      ctx.KONG_BALANCER_ENDED_AT = ctx.KONG_RESPONSE_START or
+      set_ctx(ctx, "KONG_BALANCER_ENDED_AT", ctx.KONG_RESPONSE_START or
                                    ctx.KONG_HEADER_FILTER_START or
-                                   ctx.KONG_BODY_FILTER_START
+                                   ctx.KONG_BODY_FILTER_START)
       ctx.KONG_BALANCER_TIME = ctx.KONG_BALANCER_ENDED_AT -
                                ctx.KONG_BALANCER_START
     end
 
     if ctx.KONG_RESPONSE_START and not ctx.KONG_RESPONSE_ENDED_AT then
-      ctx.KONG_RESPONSE_ENDED_AT = ctx.KONG_HEADER_FILTER_START or
-                                   ctx.KONG_BODY_FILTER_START
+      set_ctx(ctx, "KONG_RESPONSE_ENDED_AT", ctx.KONG_HEADER_FILTER_START or
+                                   ctx.KONG_BODY_FILTER_START)
       ctx.KONG_RESPONSE_TIME = ctx.KONG_RESPONSE_ENDED_AT -
                                ctx.KONG_RESPONSE_START
     end
 
     if ctx.KONG_HEADER_FILTER_START and not ctx.KONG_HEADER_FILTER_ENDED_AT then
-      ctx.KONG_HEADER_FILTER_ENDED_AT = ctx.KONG_BODY_FILTER_START
+      set_ctx(ctx, "KONG_HEADER_FILTER_ENDED_AT", ctx.KONG_BODY_FILTER_START)
       ctx.KONG_HEADER_FILTER_TIME = ctx.KONG_HEADER_FILTER_ENDED_AT -
                                     ctx.KONG_HEADER_FILTER_START
     end
@@ -1710,8 +1727,8 @@ function Kong.body_filter()
     return
   end
 
-  ctx.KONG_BODY_FILTER_ENDED_AT = get_updated_now_ms()
-  ctx.KONG_BODY_FILTER_ENDED_AT_NS = time_ns()
+  set_ctx(ctx, "KONG_BODY_FILTER_ENDED_AT", get_updated_now_ms())
+  set_ctx(ctx, "KONG_BODY_FILTER_ENDED_AT_NS", time_ns())
   ctx.KONG_BODY_FILTER_TIME = ctx.KONG_BODY_FILTER_ENDED_AT - ctx.KONG_BODY_FILTER_START
 
   if ctx.KONG_PROXIED then
@@ -1740,21 +1757,21 @@ function Kong.log()
   end
 
   if not ctx.KONG_LOG_START then
-    ctx.KONG_LOG_START = get_now_ms()
-    ctx.KONG_LOG_START_NS = time_ns()
+    set_ctx(ctx, "KONG_LOG_START", get_now_ms())
+    set_ctx(ctx, "KONG_LOG_START_NS", time_ns())
     if is_stream_module then
       if not ctx.KONG_PROCESSING_START then
-        ctx.KONG_PROCESSING_START = get_start_time_ms()
+        set_ctx(ctx, "KONG_PROCESSING_START", get_start_time_ms())
       end
 
       if ctx.KONG_PREREAD_START and not ctx.KONG_PREREAD_ENDED_AT then
-        ctx.KONG_PREREAD_ENDED_AT = ctx.KONG_LOG_START
+        set_ctx(ctx, "KONG_PREREAD_ENDED_AT", ctx.KONG_LOG_START)
         ctx.KONG_PREREAD_TIME = ctx.KONG_PREREAD_ENDED_AT -
                                 ctx.KONG_PREREAD_START
       end
 
       if ctx.KONG_BALANCER_START and not ctx.KONG_BALANCER_ENDED_AT then
-        ctx.KONG_BALANCER_ENDED_AT = ctx.KONG_LOG_START
+        set_ctx(ctx, "KONG_BALANCER_ENDED_AT", ctx.KONG_LOG_START)
         ctx.KONG_BALANCER_TIME = ctx.KONG_BALANCER_ENDED_AT -
                                  ctx.KONG_BALANCER_START
       end
@@ -1772,45 +1789,45 @@ function Kong.log()
 
     else
       if ctx.KONG_REWRITE_START and not ctx.KONG_REWRITE_ENDED_AT then
-        ctx.KONG_REWRITE_ENDED_AT = ctx.KONG_ACCESS_START or
+        set_ctx(ctx, "KONG_REWRITE_ENDED_AT", ctx.KONG_ACCESS_START or
                                     ctx.KONG_BALANCER_START or
                                     ctx.KONG_RESPONSE_START or
                                     ctx.KONG_HEADER_FILTER_START or
                                     ctx.BODY_FILTER_START or
-                                    ctx.KONG_LOG_START
+                                    ctx.KONG_LOG_START)
         ctx.KONG_REWRITE_TIME = ctx.KONG_REWRITE_ENDED_AT -
                                 ctx.KONG_REWRITE_START
       end
 
       if ctx.KONG_ACCESS_START and not ctx.KONG_ACCESS_ENDED_AT then
-        ctx.KONG_ACCESS_ENDED_AT = ctx.KONG_BALANCER_START or
+        set_ctx(ctx, "KONG_ACCESS_ENDED_AT", ctx.KONG_BALANCER_START or
                                    ctx.KONG_RESPONSE_START or
                                    ctx.KONG_HEADER_FILTER_START or
                                    ctx.BODY_FILTER_START or
-                                   ctx.KONG_LOG_START
+                                   ctx.KONG_LOG_START)
         ctx.KONG_ACCESS_TIME = ctx.KONG_ACCESS_ENDED_AT -
                                ctx.KONG_ACCESS_START
       end
 
       if ctx.KONG_BALANCER_START and not ctx.KONG_BALANCER_ENDED_AT then
-        ctx.KONG_BALANCER_ENDED_AT = ctx.KONG_RESPONSE_START or
+        set_ctx(ctx, "KONG_BALANCER_ENDED_AT", ctx.KONG_RESPONSE_START or
                                      ctx.KONG_HEADER_FILTER_START or
                                      ctx.BODY_FILTER_START or
-                                     ctx.KONG_LOG_START
+                                     ctx.KONG_LOG_START)
         ctx.KONG_BALANCER_TIME = ctx.KONG_BALANCER_ENDED_AT -
                                  ctx.KONG_BALANCER_START
       end
 
       if ctx.KONG_HEADER_FILTER_START and not ctx.KONG_HEADER_FILTER_ENDED_AT then
-        ctx.KONG_HEADER_FILTER_ENDED_AT = ctx.BODY_FILTER_START or
-                                          ctx.KONG_LOG_START
+        set_ctx(ctx, "KONG_HEADER_FILTER_ENDED_AT", ctx.BODY_FILTER_START or
+                                          ctx.KONG_LOG_START)
         ctx.KONG_HEADER_FILTER_TIME = ctx.KONG_HEADER_FILTER_ENDED_AT -
                                       ctx.KONG_HEADER_FILTER_START
       end
 
       if ctx.KONG_BODY_FILTER_START and not ctx.KONG_BODY_FILTER_ENDED_AT then
-        ctx.KONG_BODY_FILTER_ENDED_AT = ctx.KONG_LOG_START
-        ctx.KONG_BODY_FILTER_ENDED_AT_NS = ctx.KONG_LOG_START_NS
+        set_ctx(ctx, "KONG_BODY_FILTER_ENDED_AT", ctx.KONG_LOG_START)
+        set_ctx(ctx, "KONG_BODY_FILTER_ENDED_AT_NS", ctx.KONG_LOG_START_NS)
         ctx.KONG_BODY_FILTER_TIME = ctx.KONG_BODY_FILTER_ENDED_AT -
                                     ctx.KONG_BODY_FILTER_START
       end
@@ -1837,7 +1854,7 @@ function Kong.log()
   release_table(CTX_NS, ctx)
 
   -- this is not used for now, but perhaps we need it later?
-  --ctx.KONG_LOG_ENDED_AT = get_now_ms()
+  --set_ctx(ctx, "KONG_LOG_ENDED_AT", get_now_ms())
   --ctx.KONG_LOG_TIME = ctx.KONG_LOG_ENDED_AT - ctx.KONG_LOG_START
 end
 
@@ -1857,8 +1874,8 @@ end
 
 local function serve_content(module)
   local ctx = ngx.ctx
-  ctx.KONG_PROCESSING_START = get_start_time_ms()
-  ctx.KONG_ADMIN_CONTENT_START = ctx.KONG_ADMIN_CONTENT_START or get_now_ms()
+  set_ctx(ctx, "KONG_PROCESSING_START", get_start_time_ms())
+  set_ctx(ctx, "KONG_ADMIN_CONTENT_START", ctx.KONG_ADMIN_CONTENT_START or get_now_ms())
   ctx.KONG_PHASE = PHASES.admin_api
 
   log_init_worker_errors(ctx)
@@ -1867,7 +1884,7 @@ local function serve_content(module)
 
   lapis.serve(module)
 
-  ctx.KONG_ADMIN_CONTENT_ENDED_AT = get_updated_now_ms()
+  set_ctx(ctx, "KONG_ADMIN_CONTENT_ENDED_AT", get_updated_now_ms())
   ctx.KONG_ADMIN_CONTENT_TIME = ctx.KONG_ADMIN_CONTENT_ENDED_AT - ctx.KONG_ADMIN_CONTENT_START
   ctx.KONG_ADMIN_LATENCY = ctx.KONG_ADMIN_CONTENT_ENDED_AT - ctx.KONG_PROCESSING_START
 end
@@ -1889,14 +1906,14 @@ function Kong.admin_header_filter()
   local ctx = ngx.ctx
 
   if not ctx.KONG_PROCESSING_START then
-    ctx.KONG_PROCESSING_START = get_start_time_ms()
+    set_ctx(ctx, "KONG_PROCESSING_START", get_start_time_ms())
   end
 
   if not ctx.KONG_ADMIN_HEADER_FILTER_START then
-    ctx.KONG_ADMIN_HEADER_FILTER_START = get_now_ms()
+    set_ctx(ctx, "KONG_ADMIN_HEADER_FILTER_START", get_now_ms())
 
     if ctx.KONG_ADMIN_CONTENT_START and not ctx.KONG_ADMIN_CONTENT_ENDED_AT then
-      ctx.KONG_ADMIN_CONTENT_ENDED_AT = ctx.KONG_ADMIN_HEADER_FILTER_START
+      set_ctx(ctx, "KONG_ADMIN_CONTENT_ENDED_AT", ctx.KONG_ADMIN_HEADER_FILTER_START)
       ctx.KONG_ADMIN_CONTENT_TIME = ctx.KONG_ADMIN_CONTENT_ENDED_AT - ctx.KONG_ADMIN_CONTENT_START
     end
 
@@ -1920,7 +1937,7 @@ function Kong.admin_header_filter()
   end
 
   -- this is not used for now, but perhaps we need it later?
-  --ctx.KONG_ADMIN_HEADER_FILTER_ENDED_AT = get_now_ms()
+  --set_ctx(ctx, "KONG_ADMIN_HEADER_FILTER_ENDED_AT", get_now_ms())
   --ctx.KONG_ADMIN_HEADER_FILTER_TIME = ctx.KONG_ADMIN_HEADER_FILTER_ENDED_AT - ctx.KONG_ADMIN_HEADER_FILTER_START
 end
 

@@ -1,4 +1,5 @@
 
+local Queue = require "kong.tools.queue"
 local proc_mgmt = require "kong.runloop.plugin_servers.process"
 local cjson = require "cjson.safe"
 local clone = require "table.clone"
@@ -304,6 +305,29 @@ end
 
 
 
+local queue_conf = -- configuration for the queue itself (defaults shown unless noted)
+{
+  name = "plugin_servers_log", -- name of the queue (required)
+  log_tag = "plugin_servers_log", -- tag string to identify plugin or application area in logs
+  max_batch_size = 1, -- maximum number of entries in one batch (default 1)
+  max_coalescing_delay = 1, -- maximum number of seconds after first entry before a batch is sent
+  max_entries = 10000, -- maximum number of entries on the queue (default 10000)
+  max_bytes = nil, -- maximum number of bytes on the queue (default nil)
+  initial_retry_delay = 0.01, -- initial delay when retrying a failed batch, doubled for each subsequent retry
+  max_retry_time = 60, -- maximum number of seconds before a failed batch is dropped
+  max_retry_delay = 60, -- maximum delay between send attempts, caps exponential retry
+}
+
+
+local function send_log_rpc(conf, entries)
+  local saved = entries[1]
+  get_ctx_table(saved.ngx_ctx)
+  local co = coroutine_running()
+  save_for_later[co] = saved
+  saved.server_rpc:handle_event(saved.plugin_name, conf, "log")
+  save_for_later[co] = nil
+  return true
+end
 
 
 --- Phase closures
@@ -317,16 +341,8 @@ local function build_phases(plugin)
   for _, phase in ipairs(plugin.phases) do
     if phase == "log" then
       plugin[phase] = function(self, conf)
-        native_timer_at(0, function(premature, saved)
-          if premature then
-            return
-          end
-          get_ctx_table(saved.ngx_ctx)
-          local co = coroutine_running()
-          save_for_later[co] = saved
-          server_rpc:handle_event(self.name, conf, phase)
-          save_for_later[co] = nil
-        end, {
+        Queue.enqueue(queue_conf, send_log_rpc, conf, {
+          server_rpc = server_rpc,
           plugin_name = self.name,
           serialize_data = kong.log.serialize(),
           ngx_ctx = clone(ngx.ctx),
