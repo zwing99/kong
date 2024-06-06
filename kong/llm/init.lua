@@ -30,6 +30,18 @@ local gemini_options_schema = {
   },
 }
 
+local bedrock_options_schema = {
+  type = "record",
+  required = false,
+  fields = {
+    { aws_region = {
+      description = "If using AWS providers (Bedrock) you can override the `AWS_REGION` " ..
+                    "environment variable by setting this option.",
+      type = "string",
+      required = false }},
+  },
+}
+
 local auth_schema = {
   type = "record",
   required = false,
@@ -75,14 +87,14 @@ local auth_schema = {
         referenceable = true }},
     { aws_access_key_id = {
         type = "string",
-        description = "Set this if you are using an AWS provider (Bedrock, SageMaker) and you are authenticating " ..
+        description = "Set this if you are using an AWS provider (Bedrock) and you are authenticating " ..
                       "using static IAM User credentials.",
         required = false,
         encrypted = true,
         referenceable = true }},
     { aws_secret_access_key = {
         type = "string",
-        description = "Set this if you are using an AWS provider (Bedrock, SageMaker) and you are authenticating " ..
+        description = "Set this if you are using an AWS provider (Bedrock) and you are authenticating " ..
                       "using static IAM User credentials.",
         required = false,
         encrypted = true,
@@ -152,11 +164,7 @@ local model_options_schema = {
         type = "string",
         required = false }},
     { gemini = gemini_options_schema },
-    { aws_region = {
-        description = "If using AWS providers (Bedrock, SageMaker) you can override the `AWS_REGION` " ..
-                      "environment variable by setting this option.",
-        type = "string",
-        required = false }},
+    { bedrock = bedrock_options_schema },
   }
 }
 
