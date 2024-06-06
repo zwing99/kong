@@ -50,6 +50,7 @@ _M.streaming_has_token_counts = {
   ["llama2"] = true,
   ["anthropic"] = true,
   ["gemini"] = true,
+  ["bedrock"] = true,
 }
 
 _M.upstream_url_format = {
