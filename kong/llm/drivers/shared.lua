@@ -256,7 +256,7 @@ function _M.frame_to_events(frame, provider)
         break
       end
 
-      events[#events+1] = "data: " .. cjson.encode(msg)
+      events[#events+1] = { data = cjson.encode(msg) }
     end
 
   else
